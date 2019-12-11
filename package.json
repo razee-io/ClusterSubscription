@@ -1,0 +1,24 @@
+{
+  "name": "ClusterSubscription",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/razee-io/ClusterSubscription.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/razee-io/ClusterSubscription/issues"
+  },
+  "homepage": "https://github.com/razee-io/ClusterSubscription#readme",
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "socket.io-client": "^2.3.0"
+  }
+}
