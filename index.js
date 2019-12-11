@@ -1,24 +1,34 @@
 
 const io = require('socket.io-client');
 const CryptoJS = require('crypto-js');
+const Mustache = require('mustache');
+const template = require('./resourceTemplate');
+
+const ORG_KEY = process.env.RAZEE_ORG_KEY;
+const RAZEE_API = process.env.RAZEE_API;
+const RAZEE_TAGS = process.env.RAZEE_TAGS;
 
 function decryptYaml(str) {
-  return CryptoJS.AES.decrypt(str, process.env.RAZEE_ORG_KEY).toString(CryptoJS.enc.Utf8);
+  return CryptoJS.AES.decrypt(str, ORG_KEY).toString(CryptoJS.enc.Utf8);
 }
 
-var socket = io(process.env.RAZEE_API, { 
+const socket = io(RAZEE_API, { 
   query: {
-    'razee-org-key': process.env.RAZEE_ORG_KEY,
-    'tags': process.env.RAZEE_TAGS
+    'razee-org-key': ORG_KEY,
+    'tags': RAZEE_TAGS
   },
 });
 
 socket.connect(); 
 
 // listen for subscription changes
-socket.on('subscriptions', function(data) {
+socket.on('subscriptions', function(urls) {
   console.log('Received subscription data from razeeapi');
-  console.log(data);
+  const yaml = Mustache.render(template, {
+    urls,
+    orgKey: ORG_KEY
+  });
+  console.log(yaml);
 });
 
 // Add a connect listener
