@@ -1,16 +1,11 @@
 
 const io = require('socket.io-client');
-const CryptoJS = require('crypto-js');
 const Mustache = require('mustache');
 const template = require('./resourceTemplate');
 
 const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
 const RAZEE_TAGS = process.env.RAZEE_TAGS;
-
-function decryptYaml(str) {
-  return CryptoJS.AES.decrypt(str, ORG_KEY).toString(CryptoJS.enc.Utf8);
-}
 
 const socket = io(RAZEE_API, { 
   query: {
