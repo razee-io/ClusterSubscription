@@ -24,14 +24,22 @@ const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
 const RAZEE_TAGS = process.env.RAZEE_TAGS;
 
+if(!ORG_KEY){
+  throw `Please specify process.env.RAZEE_ORG_KEY`;
+}
+if(!RAZEE_API){
+  throw `Please specify process.env.RAZEE_API`;
+}
+
 const socket = io(RAZEE_API, { 
   query: {
+    action: 'subscriptions',
     'razee-org-key': ORG_KEY,
     'tags': RAZEE_TAGS
   },
 });
 
-socket.connect(); 
+socket.connect();
 
 // listen for subscription changes
 socket.on('subscriptions', async function(urls) {
