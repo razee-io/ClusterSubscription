@@ -1,24 +1,9 @@
-
 const io = require('socket.io-client');
 const Mustache = require('mustache');
-const template = require('./resourceTemplate');
 
 const { KubeClass, KubeApiConfig } = require('@razee/kubernetes-util');
 const kubeApiConfig = KubeApiConfig();
 const kc = new KubeClass(kubeApiConfig);
-// console.log(kc);
-
-// const k8s = require('@kubernetes/client-node');
-// const kc = new k8s.KubeConfig();
-// kc.loadFromCluster();
-// const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-// k8sApi.listNamespacedPod('razee')
-//     .then((res) => {
-// 	console.log(res.body);
-//     })
-//     .catch((err) => {
-//         console.log(err);
-//     });
 
 const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
@@ -31,6 +16,11 @@ if(!RAZEE_API){
   throw `Please specify process.env.RAZEE_API`;
 }
 
+const API_VERSION="deploy.razee.io/v1alpha1";
+const KIND="RemoteResource";
+const RESOURCE_NAME="clustersubscription-rr";
+const NAMESPACE="razee";
+
 const socket = io(RAZEE_API, { 
   query: {
     action: 'subscriptions',
@@ -41,71 +31,78 @@ const socket = io(RAZEE_API, {
 
 socket.connect();
 
+async function applyResource(krm, resource, mode) {
+  return new Promise(async function(resolve, reject) {
+    try {
+      let result;
+      if(mode === 'post') {
+        result = await krm.post(resource);
+      }else if(mode === 'mergePatch') {
+        result = await krm.mergePatch(RESOURCE_NAME, NAMESPACE, resource);
+      }
+      resolve(result);
+    } catch (error) {
+      console.log(`error applying yaml using ${mode}. rc: ${error.statusCode}`);
+      reject(error.statusCode); 
+    }
+  });
+}
+
 // listen for subscription changes
 socket.on('subscriptions', async function(urls) {
-  console.log('Received subscription data from razeeapi');
-  const yaml = Mustache.render(template, {
-    urls,
-    orgKey: ORG_KEY
+  console.log('Received subscription data from razeeapi', urls);
+
+  const resourceTemplate = {
+    "apiVersion": API_VERSION,
+    "kind": KIND,
+    "metadata": {
+      "name": RESOURCE_NAME,
+      "namespace": NAMESPACE,
+    },
+    "spec": {
+      "requests": []
+    }
+  };
+
+  const requestsTemplate = `{
+    "options": {
+      "url": "{{{url}}}",
+      "headers": {
+        "razee-org-key": "{{orgKey}}"
+      }
+    }
+  }`;
+
+  urls.forEach(url => {
+    url = `${RAZEE_API}/${url}`;
+    let rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
+    let parsed = JSON.parse(rendered);
+    resourceTemplate.spec.requests.push(parsed);
   });
-  console.log(yaml);
-  let apiVersion = 'deploy.razee.io/v1alpha1';
-  let kind = 'RemoteResource';
-  let krm = await kc.getKubeResourceMeta(apiVersion, kind, 'update');
+
+  let krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
+  
+  // apply the RemoteResource on the cluster.  First try a post (for a brand new resource).  
+  // If the post fails with a 409 then the resource already exists on the cluster so try a mergePatch instead.
   try {
-      // console.log('post --------------------');
-      // const post = await krm.post(JSON.parse(yaml));
-      // console.log(post);
-    krm.get('subscription-genned-deployables', 'razee')
-    .then( (data) => {
-      console.log('return from promise');
-      console.log(data);
-    })
-    .catch( (error) => {
-      console.log('error from promise');
-      console.log(error);
-    });
-    // let get = await krm.get('subscription-genned-deployables', 'razee');
-    // if (get.statusCode === 200) {
-    //   console.log('mergePatch --------------------');
-    //   const mergePatch = await krm.mergePatch('subscription-genned-deployables','razee', JSON.parse(yaml));
-    //   console.log(mergePatch);
-    // } else if (get.statusCode === 404) {
-    //   console.log('post --------------------');
-    //   const post = await krm.post(JSON.parse(yaml));
-    //   console.log(post.statusCode);
-    // } else {
-    //   console.log('blargh!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    //   console.log(get);
-    // }
-
-    // if(post.statusCode === 409) {
-    //   console.log('resource already exists.  trying mergePatch now');
-    // }
-    // let post = await krm.mergePatch('subscription-genned-deployables','razee', JSON.parse(yaml));
-    
-    // if (!(post.statusCode === 200 || post.statusCode === 201 || post.statusCode === 202)) {
-    //   console.log('non 200, 201, 202');
-    //   console.log(post.statusCode);
-    // } else {
-    //   console.log(post.statusCode);
-    // }
-    
+    const postResults = await applyResource(krm, resourceTemplate, 'post');
+    console.log('remote resource applied', postResults);
   } catch (error) {
-    console.log('################## caught error ######################');
-    console.log(error.statusCode);
-    console.log(error.message);
-    console.log(error.options);
+    if(error === 409) {
+      const patchResults = await applyResource(krm, resourceTemplate, 'mergePatch');
+      console.log('remote resource re-applied', patchResults);
+    } else {
+      console.log('Could not apply the resource.', error);
+      console.log(resourceTemplate);
+      
+    }
   }
-
 });
 
-// Add a connect listener
 socket.on('connect',function() {
   console.log('Client has connected to the server!');
 });
 
-// Add a disconnect listener
 socket.on('disconnect',function() {
 	console.log('The client has disconnected!');
 });
