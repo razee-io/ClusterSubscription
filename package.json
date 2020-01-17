@@ -1,7 +1,7 @@
 {
   "name": "ClusterSubscription",
   "version": "0.1.0",
-  "description": "",
+  "description": "Subscribe to razee controlled resources",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -20,6 +20,7 @@
   "homepage": "https://github.com/razee-io/ClusterSubscription#readme",
   "dependencies": {
     "@razee/kubernetes-util": "0.0.7",
+    "bunyan": "^1.8.12",
     "mustache": "^3.2.1",
     "socket.io-client": "^2.3.0"
   }

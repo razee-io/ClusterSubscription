@@ -1,6 +1,8 @@
 const io = require('socket.io-client');
 const Mustache = require('mustache');
 
+const log = require('./lib/bunyan-api').createLogger('cluster-subscription');
+
 const { KubeClass, KubeApiConfig } = require('@razee/kubernetes-util');
 const kubeApiConfig = KubeApiConfig();
 const kc = new KubeClass(kubeApiConfig);
@@ -42,7 +44,7 @@ async function applyResource(krm, resource, mode) {
       }
       resolve(result);
     } catch (error) {
-      console.log(`error applying yaml using ${mode}. rc: ${error.statusCode}`);
+      log.warn(`error applying yaml using ${mode}. rc: ${error.statusCode}`);
       reject(error.statusCode); 
     }
   });
@@ -50,7 +52,7 @@ async function applyResource(krm, resource, mode) {
 
 // listen for subscription changes
 socket.on('subscriptions', async function(urls) {
-  console.log('Received subscription data from razeeapi', urls);
+  log.info('Received subscription data from razeeapi', urls);
 
   const resourceTemplate = {
     "apiVersion": API_VERSION,
@@ -86,23 +88,21 @@ socket.on('subscriptions', async function(urls) {
   // If the post fails with a 409 then the resource already exists on the cluster so try a mergePatch instead.
   try {
     const postResults = await applyResource(krm, resourceTemplate, 'post');
-    console.log('remote resource applied', postResults);
+    log.info('remote resource applied', postResults);
   } catch (error) {
     if(error === 409) {
       const patchResults = await applyResource(krm, resourceTemplate, 'mergePatch');
-      console.log('remote resource re-applied', patchResults);
+      log.info('remote resource re-applied', patchResults);
     } else {
-      console.log('Could not apply the resource.', error);
-      console.log(resourceTemplate);
-      
+      log.error('Could not apply the resource.', resourceTemplate, error);
     }
   }
 });
 
 socket.on('connect',function() {
-  console.log('Client has connected to the server!');
+  log.info('Client has connected to the server!');
 });
 
 socket.on('disconnect',function() {
-	console.log('The client has disconnected!');
+	log.info('The client has disconnected!');
 });
