@@ -1,3 +1,4 @@
+#!/bin/bash
 ################################################################################
 # Copyright 2019 IBM Corp. All Rights Reserved.
 #
@@ -13,22 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ################################################################################
+set -e
 
-FROM node:alpine as buildImg
+FILE="${1}"
+THIS_DIR=$(dirname "${BASH_SOURCE[0]}")
+TRAVIS_COMMIT="${TRAVIS_COMMIT:=$(git rev-parse HEAD)}"
+export TRAVIS_COMMIT
+GIT_REMOTE="$(git remote get-url origin)"
+export GIT_REMOTE
 
-RUN apk update
-RUN apk --no-cache add gnupg python make curl
+envsubst <"${THIS_DIR}/viewTemplate.json" >/tmp/view.json
 
-RUN mkdir -p /usr/src/app
-ENV PATH="$PATH:/usr/src/app"
-WORKDIR /usr/src/app
-COPY . /usr/src/app
-RUN npm install --production --loglevel=warn
-
-FROM node:alpine
-RUN apk add --upgrade --no-cache libssl1.1
-RUN mkdir -p /usr/src/app
-ENV PATH="$PATH:/usr/src/app"
-WORKDIR /usr/src/app
-COPY --from=buildImg /usr/src/app /usr/src/app
-CMD ["npm", "start"]
+npx mustache /tmp/view.json "${FILE}"
