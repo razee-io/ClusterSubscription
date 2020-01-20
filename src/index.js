@@ -34,6 +34,7 @@ const socket = io(RAZEE_API, {
     'razee-org-key': ORG_KEY,
     'tags': RAZEE_TAGS
   },
+  transports: ['websocket']
 });
 
 socket.connect();
@@ -104,4 +105,8 @@ socket.on('connect',function() {
 
 socket.on('disconnect',function() {
   log.info('The client has disconnected!');
+});
+
+socket.on('connect_error', (error) => {
+  log.error(error);
 });
