@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: clustersubscription-controller
+  name: clustersubscription
   namespace: razee
   annotations:
     version: "{{TRAVIS_COMMIT}}"
@@ -13,15 +13,15 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: clustersubscription-controller
+      app: clustersubscription
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: clustersubscription-controller
+        app: clustersubscription
         razee/watch-resource: "lite"
-      name: clustersubscription-controller
+      name: clustersubscription
     spec:
       serviceAccountName: razeedeploy-sa
       containers:
@@ -50,4 +50,4 @@ spec:
                 name: clustersubscription
                 key: RAZEE_API
         imagePullPolicy: Always
-        name: clustersubscription-controller
+        name: clustersubscription
