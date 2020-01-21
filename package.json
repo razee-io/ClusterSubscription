@@ -29,7 +29,7 @@
     "eslint": "^6.8.0",
     "jsonlint": "^1.6.3",
     "markdownlint-cli": "^0.21.0",
-    "mustache": "^3.2.1",
+    "mustache": "^4.0.0",
     "objectpath": "^1.2.2",
     "socket.io-client": "^2.3.0"
   }
