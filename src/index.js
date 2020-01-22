@@ -1,6 +1,5 @@
 const io = require('socket.io-client');
 const Mustache = require('mustache');
-const objectPath = require('object-path');
 
 const log = require('../lib/bunyan-api').createLogger('cluster-subscription');
 
@@ -76,7 +75,7 @@ socket.on('subscriptions', async function(urls) {
 
   const uri = krm.uri({ name: RESOURCE_NAME, namespace: NAMESPACE});
   const get = await krm.get(RESOURCE_NAME, NAMESPACE, opt);
-  log.info(`Get ${get.statusCode} ${uri}: resourceVersion ${objectPath.get(get, 'body.metadata.resourceVersion')}`);
+  log.info(`Get ${get.statusCode} ${uri}`);
   if (get.statusCode === 200) {
     // the remote resource already exists so use mergePatch to apply the resource
     const mergeResult = await krm.mergePatch(RESOURCE_NAME, NAMESPACE, resourceTemplate, opt);
