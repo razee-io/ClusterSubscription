@@ -1,6 +1,6 @@
 {
   "name": "ClusterSubscription",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Subscribe to razee controlled resources",
   "main": "index.js",
   "scripts": {
