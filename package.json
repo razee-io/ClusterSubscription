@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/razee-io/ClusterSubscription#readme",
   "dependencies": {
-    "@razee/kubernetes-util": "0.0.7",
+    "@razee/kubernetes-util": "0.0.9",
     "bunyan": "^1.8.12",
     "dockerlint": "^0.3.9",
     "eslint": "^6.8.0",
