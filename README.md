@@ -18,7 +18,6 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
  name: clustersubscription
- namespace: razee
 data:
  RAZEE_ORG_KEY: "orgApiKey-...."
  RAZEE_TAGS: "tags"
