@@ -4,7 +4,7 @@ Subscribe to Razee controlled resources
 
 ## Install
 
-1. Create the `clustersubscription` config map on your cluster(s)
+- Create the `clustersubscription` config map on your cluster(s)
 
   ```shell
   kubectl create cm clustersubscription \
@@ -13,13 +13,14 @@ Subscribe to Razee controlled resources
   --from-literal=RAZEE_TAGS='comma-separated-tags-go-here'
   ```
 
-2. Install RazeeDeploy in your cluster (this will also install the ClusterSubscription agent)
+- Install RazeeDeploy in your cluster
 
 ```shell
 kubectl apply -f https://github.com/razee-io/RazeeDeploy-delta/releases/latest/download/resource.yaml
 ```
 
-3. Logon to your RazeeDash server and go to the `Deployables` page to create channels and subscriptions
+- Logon to your RazeeDash server and go to the
+`Deployables` page to create channels and subscriptions
 
 ## Environment Variables
 <!--Markdownlint-disable MD034-->
