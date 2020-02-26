@@ -13,10 +13,12 @@ Subscribe to Razee controlled resources
   --from-literal=RAZEE_TAGS='comma-separated-tags-go-here'
   ```
 
-- Install RazeeDeploy in your cluster
+- Install RazeeDeploy and ClusterSubscription in your cluster
 
 ```shell
 kubectl apply -f https://github.com/razee-io/RazeeDeploy-delta/releases/latest/download/resource.yaml
+kubectl apply -f https://github.com/razee-io/ClusterSubscription/releases/latest/download/resource.yaml
+
 ```
 
 - Logon to your RazeeDash server and go to the
