@@ -1,5 +1,6 @@
 const io = require('socket.io-client');
 const Mustache = require('mustache');
+const _ = require('lodash');
 
 const log = require('../lib/bunyan-api').createLogger('cluster-subscription');
 
@@ -39,8 +40,13 @@ const socket = io(RAZEE_API, {
 socket.connect();
 
 // listen for subscription changes
-socket.on('subscriptions', async function(urls) {
-  log.info('Received subscription data from razeeapi', urls);
+socket.on('subscriptions', async function(data) {
+  log.info('Received subscription data from razeeapi', data);
+
+  var urls = data.urls;
+  if(_.isArray(data)){
+    urls = data;
+  }
 
   const resourceTemplate = {
     'apiVersion': API_VERSION,
