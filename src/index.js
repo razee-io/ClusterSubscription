@@ -26,7 +26,7 @@ const API_HOST = RAZEE_API.replace(regex, '');
 const API_VERSION='deploy.razee.io/v1alpha1';
 const KIND='RemoteResource';
 const RESOURCE_NAME='clustersubscription-rr';
-const NAMESPACE='razee';
+const NAMESPACE = process.env.NAMESPACE';
 
 const socket = io(RAZEE_API, { 
   query: {
