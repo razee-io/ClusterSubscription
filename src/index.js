@@ -12,10 +12,10 @@ const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
 const RAZEE_TAGS = process.env.RAZEE_TAGS;
 
-if(!ORG_KEY){
+if (!ORG_KEY) {
   throw 'Please specify process.env.RAZEE_ORG_KEY';
 }
-if(!RAZEE_API){
+if (!RAZEE_API) {
   throw 'Please specify process.env.RAZEE_API';
 }
 
@@ -23,12 +23,12 @@ if(!RAZEE_API){
 const regex = /\/*$/gi;
 const API_HOST = RAZEE_API.replace(regex, '');
 
-const API_VERSION='deploy.razee.io/v1alpha1';
-const KIND='RemoteResource';
-const RESOURCE_NAME='clustersubscription-rr';
-const NAMESPACE = process.env.NAMESPACE';
+const API_VERSION = 'deploy.razee.io/v1alpha1';
+const KIND = 'RemoteResource';
+const RESOURCE_NAME = 'clustersubscription-rr';
+const NAMESPACE = process.env.NAMESPACE;
 
-const socket = io(RAZEE_API, { 
+const socket = io(RAZEE_API, {
   query: {
     action: 'subscriptions',
     'razee-org-key': ORG_KEY,
@@ -40,11 +40,11 @@ const socket = io(RAZEE_API, {
 socket.connect();
 
 // listen for subscription changes
-socket.on('subscriptions', async function(data) {
+socket.on('subscriptions', async function (data) {
   log.info('Received subscription data from razeeapi', data);
 
   var urls = data.urls;
-  if(_.isArray(data)){
+  if (_.isArray(data)) {
     urls = data;
   }
 
@@ -79,13 +79,13 @@ socket.on('subscriptions', async function(data) {
   const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
   const opt = { simple: false, resolveWithFullResponse: true };
 
-  const uri = krm.uri({ name: RESOURCE_NAME, namespace: NAMESPACE});
+  const uri = krm.uri({ name: RESOURCE_NAME, namespace: NAMESPACE });
   const get = await krm.get(RESOURCE_NAME, NAMESPACE, opt);
   log.info(`Get ${get.statusCode} ${uri}`);
   if (get.statusCode === 200) {
     // the remote resource already exists so use mergePatch to apply the resource
     const mergeResult = await krm.mergePatch(RESOURCE_NAME, NAMESPACE, resourceTemplate, opt);
-    if(mergeResult.statusCode === 200) {
+    if (mergeResult.statusCode === 200) {
       log.info('mergePatch successful', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
     } else {
       log.error('mergePatch error', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
@@ -93,7 +93,7 @@ socket.on('subscriptions', async function(data) {
   } else if (get.statusCode === 404) {
     // the remote resource does not exist so use post to apply the resource
     const postResult = await krm.post(resourceTemplate, opt);
-    if(postResult.statusCode === 200 || postResult.statusCode === 201) {
+    if (postResult.statusCode === 200 || postResult.statusCode === 201) {
       log.info('post successful', postResult.statusCode, postResult.statusMessage, postResult.body);
     } else {
       log.error('post error', postResult.statusCode, postResult.statusMessage, postResult.body);
@@ -101,14 +101,14 @@ socket.on('subscriptions', async function(data) {
   } else {
     log.error(`Get ${get.statusCode} ${uri}`);
   }
-  
+
 });
 
-socket.on('connect',function() {
+socket.on('connect', function () {
   log.info('Client has connected to the server!');
 });
 
-socket.on('disconnect',function() {
+socket.on('disconnect', function () {
   log.info('The client has disconnected!');
 });
 
