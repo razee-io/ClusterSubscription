@@ -4,25 +4,17 @@ Subscribe to Razee controlled resources
 
 ## Install
 
-- Create the `clustersubscription` config map on your cluster(s)
-
-  ```shell
-  kubectl create cm clustersubscription \
-  --from-literal=RAZEE_API=${RAZEE_API} \
-  --from-literal=RAZEE_ORG_KEY=${RAZEE_ORG_KEY} \
-  --from-literal=RAZEE_TAGS='comma-separated-tags-go-here'
-  ```
-
-- Install RazeeDeploy and ClusterSubscription in your cluster
-
-```shell
-kubectl apply -f https://github.com/razee-io/RazeeDeploy-delta/releases/latest/download/resource.yaml
-kubectl apply -f https://github.com/razee-io/ClusterSubscription/releases/latest/download/resource.yaml
-
-```
-
-- Logon to your RazeeDash server and go to the
-`Deployables` page to create channels and subscriptions
+- Logon to your RazeeDash server and go to the manage org page.
+ie. `https://app.razee.io/stark-industries/org`
+- Install RazeeDeploy and ClusterSubscription in your cluster using the
+`Install Razee Agent` command on the org page.
+    - ie. `kubectl apply -f "https://app.razee.io/api/install/razeedeploy-job?orgKey=orgApiKey-..."`
+- Edit the `clustersubscription` config map on your cluster(s) to add the
+RAZEE_TAGS that you want.
+    - `kubectl edit cm clustersubscription`
+    - `RAZEE_TAGS: 'comma,separated,tags,go,here'`
+- Logon to your RazeeDash server and go to the `Deployables` page to create
+channels and subscriptions
 
 ## Environment Variables
 <!--Markdownlint-disable MD034-->
