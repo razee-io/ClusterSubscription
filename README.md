@@ -25,17 +25,23 @@ channels and subscriptions
 | RAZEE_ORG_KEY       | yes | The orgApiKey used to communicate with razeedash-api. ex: orgApiKey-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeer . You can find this value from your org page on RazeeDash. ex: https://your-razeedash/your-orgname/org|
 | RAZEE_TAGS          | yes | One or more comma-separated subscription tags which were defined in Razeedash  |
 
-These variables should be set in a config map called `clustersubscription`
+These variables should be set in a ConfigMap and Secret called `clustersubscription`
 
 ```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: clustersubscription
+data:
+  RAZEE_API: "http://api-host:8081"
+  RAZEE_TAGS: "tag1, tag2"
+---
+apiVersion: v1
+kind: Secret
+metadata:
  name: clustersubscription
 data:
- RAZEE_API: "http://api-host:8081"
  RAZEE_ORG_KEY: "orgApiKey-...."
- RAZEE_TAGS: "tag1, tag2"
 ```
 
 Updates to the ConfigMap require a restart of your `clustersubscription` pod
