@@ -8,11 +8,11 @@ Subscribe to Razee controlled resources
 ie. `https://app.razee.io/stark-industries/org`
 - Install RazeeDeploy and ClusterSubscription in your cluster using the
 `Install Razee Agent` command on the org page.
-    - ie. `kubectl apply -f "https://app.razee.io/api/install/razeedeploy-job?orgKey=orgApiKey-..."`
+  - ie. `kubectl apply -f "https://app.razee.io/api/install/razeedeploy-job?orgKey=orgApiKey-..."`
 - Edit the `clustersubscription` config map on your cluster(s) to add the
 RAZEE_TAGS that you want.
-    - `kubectl edit cm clustersubscription`
-    - `RAZEE_TAGS: 'comma,separated,tags,go,here'`
+  - `kubectl edit cm clustersubscription`
+  - `RAZEE_TAGS: 'comma,separated,tags,go,here'`
 - Logon to your RazeeDash server and go to the `Deployables` page to create
 channels and subscriptions
 
@@ -44,4 +44,4 @@ data:
  RAZEE_ORG_KEY: "orgApiKey-...."
 ```
 
-Updates to the ConfigMap require a restart of your `clustersubscription` pod
+Updates to the ConfigMap and Secret require a restart of your `clustersubscription` pod
