@@ -23,7 +23,7 @@ if (!RAZEE_API) {
 const regex = /\/*$/gi;
 const API_HOST = RAZEE_API.replace(regex, '');
 
-const API_VERSION = 'deploy.razee.io/v1alpha1';
+const API_VERSION = 'deploy.razee.io/v1alpha2';
 const KIND = 'RemoteResource';
 const RESOURCE_NAME = 'clustersubscription-rr';
 const NAMESPACE = process.env.NAMESPACE;

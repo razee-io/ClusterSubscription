@@ -39,15 +39,15 @@ spec:
                 fieldPath: metadata.namespace
           - name: RAZEE_ORG_KEY
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 name: clustersubscription
                 key: RAZEE_ORG_KEY
-          - name: RAZEE_TAGS 
+          - name: RAZEE_TAGS
             valueFrom:
               configMapKeyRef:
                 name: clustersubscription
                 key: RAZEE_TAGS
-          - name: RAZEE_API 
+          - name: RAZEE_API
             valueFrom:
               configMapKeyRef:
                 name: clustersubscription

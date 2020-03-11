@@ -4,25 +4,17 @@ Subscribe to Razee controlled resources
 
 ## Install
 
-- Create the `clustersubscription` config map on your cluster(s)
-
-  ```shell
-  kubectl create cm clustersubscription \
-  --from-literal=RAZEE_API=${RAZEE_API} \
-  --from-literal=RAZEE_ORG_KEY=${RAZEE_ORG_KEY} \
-  --from-literal=RAZEE_TAGS='comma-separated-tags-go-here'
-  ```
-
-- Install RazeeDeploy and ClusterSubscription in your cluster
-
-```shell
-kubectl apply -f https://github.com/razee-io/RazeeDeploy-delta/releases/latest/download/resource.yaml
-kubectl apply -f https://github.com/razee-io/ClusterSubscription/releases/latest/download/resource.yaml
-
-```
-
-- Logon to your RazeeDash server and go to the
-`Deployables` page to create channels and subscriptions
+- Logon to your RazeeDash server and go to the manage org page.
+ie. `https://app.razee.io/stark-industries/org`
+- Install RazeeDeploy and ClusterSubscription in your cluster using the
+`Install Razee Agent` command on the org page.
+  - ie. `kubectl apply -f "https://app.razee.io/api/install/razeedeploy-job?orgKey=orgApiKey-..."`
+- Edit the `clustersubscription` config map on your cluster(s) to add the
+RAZEE_TAGS that you want.
+  - `kubectl edit cm clustersubscription`
+  - `RAZEE_TAGS: 'comma,separated,tags,go,here'`
+- Logon to your RazeeDash server and go to the `Deployables` page to create
+channels and subscriptions
 
 ## Environment Variables
 <!--Markdownlint-disable MD034-->
@@ -33,17 +25,23 @@ kubectl apply -f https://github.com/razee-io/ClusterSubscription/releases/latest
 | RAZEE_ORG_KEY       | yes | The orgApiKey used to communicate with razeedash-api. ex: orgApiKey-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeer . You can find this value from your org page on RazeeDash. ex: https://your-razeedash/your-orgname/org|
 | RAZEE_TAGS          | yes | One or more comma-separated subscription tags which were defined in Razeedash  |
 
-These variables should be set in a config map called `clustersubscription`
+These variables should be set in a ConfigMap and Secret called `clustersubscription`
 
 ```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: clustersubscription
+data:
+  RAZEE_API: "http://api-host:8081"
+  RAZEE_TAGS: "tag1, tag2"
+---
+apiVersion: v1
+kind: Secret
+metadata:
  name: clustersubscription
 data:
- RAZEE_API: "http://api-host:8081"
  RAZEE_ORG_KEY: "orgApiKey-...."
- RAZEE_TAGS: "tag1, tag2"
 ```
 
-Updates to the ConfigMap require a restart of your `clustersubscription` pod
+Updates to the ConfigMap and Secret require a restart of your `clustersubscription` pod
