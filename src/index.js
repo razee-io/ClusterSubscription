@@ -54,6 +54,9 @@ socket.on('subscriptions', async function (data) {
     'metadata': {
       'name': RESOURCE_NAME,
       'namespace': NAMESPACE,
+      'labels': {
+        'razee/watch-resource': 'lite'
+      }
     },
     'spec': {
       'requests': []
