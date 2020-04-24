@@ -121,12 +121,9 @@ const getSubscriptions = () => {
     .then(async results => {
       let subscriptions = [];
       const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
-      console.log(krm);
       if(results.data && results.data.subscriptionsByTag) {
         subscriptions = results.data.subscriptionsByTag;
         subscriptions.map( async sub => {
-          console.log(sub.subscription_name + ' - ' + sub.subscription_uuid);
-
           let url = `${API_HOST}/${sub.url}`;
           let rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
           let parsed = JSON.parse(rendered);
@@ -146,7 +143,6 @@ const getSubscriptions = () => {
             }
           };
           resourceTemplate.spec.requests.push(parsed);
-          console.log(resourceTemplate);
 
           const opt = { simple: false, resolveWithFullResponse: true };
 
@@ -181,3 +177,5 @@ const getSubscriptions = () => {
     .catch(error => console.error(error));
 
 };
+
+getSubscriptions();
