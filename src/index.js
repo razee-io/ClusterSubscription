@@ -1,6 +1,4 @@
-const io = require('socket.io-client');
 const Mustache = require('mustache');
-const _ = require('lodash');
 
 const log = require('../lib/bunyan-api').createLogger('cluster-subscription');
 
@@ -8,10 +6,24 @@ const { KubeClass, KubeApiConfig } = require('@razee/kubernetes-util');
 const kubeApiConfig = KubeApiConfig();
 const kc = new KubeClass(kubeApiConfig);
 
+const { execute } = require('apollo-link');
+const { WebSocketLink } = require('apollo-link-ws');
+const { SubscriptionClient } = require('subscriptions-transport-ws');
+const ApolloClient = require('apollo-boost').ApolloClient;
+const fetch = require('cross-fetch/polyfill').fetch;
+const createHttpLink = require('apollo-link-http').createHttpLink;
+const InMemoryCache = require('apollo-cache-inmemory').InMemoryCache;
+const ws = require('ws');
+const gql = require('graphql-tag');
+
+const ORG_ID = process.env.RAZEE_ORG_ID;
 const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
 const RAZEE_TAGS = process.env.RAZEE_TAGS;
 
+if (!ORG_ID) {
+  throw 'Please specify process.env.RAZEE_ORG_ID';
+}
 if (!ORG_KEY) {
   throw 'Please specify process.env.RAZEE_ORG_KEY';
 }
@@ -25,96 +37,147 @@ const API_HOST = RAZEE_API.replace(regex, '');
 
 const API_VERSION = 'deploy.razee.io/v1alpha2';
 const KIND = 'RemoteResource';
-const RESOURCE_NAME = 'clustersubscription-rr';
 const NAMESPACE = process.env.NAMESPACE;
 
-const socket = io(RAZEE_API, {
-  query: {
-    action: 'subscriptions',
-    'razee-org-key': ORG_KEY,
-    'tags': RAZEE_TAGS
-  },
-  transports: ['websocket']
+const getWsClient = function(wsurl) {
+  const client = new SubscriptionClient(
+    wsurl, {
+      reconnect: true,
+      'connectionParams': {
+        headers: {
+          'razee-org-key': ORG_KEY
+        }
+      }
+    }, ws
+  );
+  return client;
+};
+
+const createSubscriptionObservable = (wsurl, query, variables) => {
+  const link = new WebSocketLink(getWsClient(wsurl));
+  return execute(link, {query: query, variables: variables});
+};
+
+const SUBSCRIBE_QUERY = gql`
+subscription WatchForUpdates {
+  subscriptionUpdated(org_id: "${ORG_ID}", tags: "${RAZEE_TAGS}") {
+    has_updates
+  }
+}
+`;
+
+const subscriptionClient = createSubscriptionObservable(
+  `${API_HOST}/graphql`, 
+  SUBSCRIBE_QUERY
+);
+
+subscriptionClient.subscribe(eventData => {
+  console.log('Received event: ');
+  console.log(JSON.stringify(eventData, null, 2));
+  // Call function to get all subscriptions
+  getSubscriptions();
+  // create the remote resources
+}, (err) => {
+  console.log('Err');
+  console.log(err);
 });
 
-socket.connect();
+const getSubscriptions = () => {
+  console.log('Fetching new subscriptions....');
 
-// listen for subscription changes
-socket.on('subscriptions', async function (data) {
-  log.info('Received subscription data from razeeapi', data);
-
-  var urls = data.urls;
-  if (_.isArray(data)) {
-    urls = data;
-  }
-
-  const resourceTemplate = {
-    'apiVersion': API_VERSION,
-    'kind': KIND,
-    'metadata': {
-      'name': RESOURCE_NAME,
-      'namespace': NAMESPACE,
-      'labels': {
-        'razee/watch-resource': 'lite'
+  const client = new ApolloClient({
+    link: createHttpLink({
+      uri: `${API_HOST}/graphql`,
+      fetch: fetch,
+      headers: {
+        'razee-org-key': ORG_KEY
       }
-    },
-    'spec': {
-      'requests': []
-    }
-  };
-
-  const requestsTemplate = `{
-    "options": {
-      "url": "{{{url}}}",
-      "headers": {
-        "razee-org-key": "{{orgKey}}"
-      }
-    }
-  }`;
-
-  urls.forEach(url => {
-    url = `${API_HOST}/${url}`;
-    let rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
-    let parsed = JSON.parse(rendered);
-    resourceTemplate.spec.requests.push(parsed);
+    }),
+    cache: new InMemoryCache()
   });
 
-  const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
-  const opt = { simple: false, resolveWithFullResponse: true };
-
-  const uri = krm.uri({ name: RESOURCE_NAME, namespace: NAMESPACE });
-  const get = await krm.get(RESOURCE_NAME, NAMESPACE, opt);
-  log.info(`Get ${get.statusCode} ${uri}`);
-  if (get.statusCode === 200) {
-    // the remote resource already exists so use mergePatch to apply the resource
-    const mergeResult = await krm.mergePatch(RESOURCE_NAME, NAMESPACE, resourceTemplate, opt);
-    if (mergeResult.statusCode === 200) {
-      log.info('mergePatch successful', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
-    } else {
-      log.error('mergePatch error', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
+  const requestsTemplate = `{
+  "options": {
+    "url": "{{{url}}}",
+    "headers": {
+      "razee-org-key": "{{orgKey}}"
     }
-  } else if (get.statusCode === 404) {
-    // the remote resource does not exist so use post to apply the resource
-    const postResult = await krm.post(resourceTemplate, opt);
-    if (postResult.statusCode === 200 || postResult.statusCode === 201) {
-      log.info('post successful', postResult.statusCode, postResult.statusMessage, postResult.body);
-    } else {
-      log.error('post error', postResult.statusCode, postResult.statusMessage, postResult.body);
-    }
-  } else {
-    log.error(`Get ${get.statusCode} ${uri}`);
   }
+}`;
 
-});
+  client.query({
+    query: gql`
+    query SubscriptionsByTags {
+      subscriptionsByTag(org_id: "${ORG_ID}", tags: "test") {
+        subscription_name
+        subscription_channel
+        subscription_uuid
+        subscription_version
+        url
+      }
+    }
+  `,
+  })
+    .then(async results => {
+      let subscriptions = [];
+      const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
+      console.log(krm);
+      if(results.data && results.data.subscriptionsByTag) {
+        subscriptions = results.data.subscriptionsByTag;
+        subscriptions.map( async sub => {
+          console.log(sub.subscription_name + ' - ' + sub.subscription_uuid);
 
-socket.on('connect', function () {
-  log.info('Client has connected to the server!');
-});
+          let url = `${API_HOST}/${sub.url}`;
+          let rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
+          let parsed = JSON.parse(rendered);
+          const resourceName = `clustersubscription-${sub.subscription_name}`;
+          const resourceTemplate = {
+            'apiVersion': API_VERSION,
+            'kind': KIND,
+            'metadata': {
+              'namespace': NAMESPACE,
+              'name': resourceName,
+              'labels': {
+                'razee/watch-resource': 'lite'
+              }
+            },
+            'spec': {
+              'requests': []
+            }
+          };
+          resourceTemplate.spec.requests.push(parsed);
+          console.log(resourceTemplate);
 
-socket.on('disconnect', function () {
-  log.info('The client has disconnected!');
-});
+          const opt = { simple: false, resolveWithFullResponse: true };
 
-socket.on('connect_error', (error) => {
-  log.error(error);
-});
+          const uri = krm.uri({ name: resourceName, namespace: NAMESPACE });
+          const get = await krm.get(resourceName, NAMESPACE, opt);
+          if (get.statusCode === 200) {
+          // the remote resource already exists so use mergePatch to apply the resource
+            log.info(`Attempting mergePatch for an existing resource ${uri}`);
+            const mergeResult = await krm.mergePatch(resourceName, NAMESPACE, resourceTemplate, opt);
+            if (mergeResult.statusCode === 200) {
+              log.info('mergePatch successful', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
+            } else {
+              log.error('mergePatch error', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
+            }
+          } else if (get.statusCode === 404) {
+          // the remote resource does not exist so use post to apply the resource
+            log.info(`Attempting post for a new resource ${uri}`);
+            const postResult = await krm.post(resourceTemplate, opt);
+            if (postResult.statusCode === 200 || postResult.statusCode === 201) {
+              log.info('post successful', postResult.statusCode, postResult.statusMessage, postResult.body);
+            } else {
+              log.error('post error', postResult.statusCode, postResult.statusMessage, postResult.body);
+            }
+          } else {
+            log.error(`Get ${get.statusCode} ${uri}`);
+          }
+
+        });
+      }
+          
+    })
+    .catch(error => console.error(error));
+
+};
