@@ -71,19 +71,15 @@ const subscriptionClient = createSubscriptionObservable(
   SUBSCRIBE_QUERY
 );
 
-subscriptionClient.subscribe(eventData => {
-  console.log('Received event: ');
-  console.log(JSON.stringify(eventData, null, 2));
-  // Call function to get all subscriptions
+subscriptionClient.subscribe( () => {
+  log.info('Received event from razeedash-api');
   getSubscriptions();
-  // create the remote resources
-}, (err) => {
-  console.log('Err');
-  console.log(err);
+}, (error) => {
+  log.error(`Error creating a connection to ${API_HOST}/graphql`, error);
 });
 
 const getSubscriptions = () => {
-  console.log('Fetching new subscriptions....');
+  log.info('Fetching subscriptions....');
 
   const client = new ApolloClient({
     link: createHttpLink({
@@ -108,7 +104,7 @@ const getSubscriptions = () => {
   client.query({
     query: gql`
     query SubscriptionsByTags {
-      subscriptionsByTag(org_id: "${ORG_ID}", tags: "test") {
+      subscriptionsByTag(org_id: "${ORG_ID}", tags: "${RAZEE_TAGS}") {
         subscription_name
         subscription_channel
         subscription_uuid
@@ -124,9 +120,9 @@ const getSubscriptions = () => {
       if(results.data && results.data.subscriptionsByTag) {
         subscriptions = results.data.subscriptionsByTag;
         subscriptions.map( async sub => {
-          let url = `${API_HOST}/${sub.url}`;
-          let rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
-          let parsed = JSON.parse(rendered);
+          const url = `${API_HOST}/${sub.url}`;
+          const rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
+          const parsed = JSON.parse(rendered);
           const resourceName = `clustersubscription-${sub.subscription_name}`;
           const resourceTemplate = {
             'apiVersion': API_VERSION,
@@ -174,8 +170,9 @@ const getSubscriptions = () => {
       }
           
     })
-    .catch(error => console.error(error));
-
+    .catch(error => {
+      log.error('Error received from the subscription client', error);
+    });
 };
 
 getSubscriptions();
