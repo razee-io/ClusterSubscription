@@ -60,7 +60,7 @@ const createSubscriptionObservable = (wsurl, query, variables) => {
 
 const SUBSCRIBE_QUERY = gql`
 subscription WatchForUpdates {
-  subscriptionUpdated(org_id: "${ORG_ID}", tags: "${RAZEE_TAGS}") {
+  subscriptionUpdated(org_id: "${ORG_ID}") {
     has_updates
   }
 }
@@ -71,9 +71,13 @@ const subscriptionClient = createSubscriptionObservable(
   SUBSCRIBE_QUERY
 );
 
-subscriptionClient.subscribe( () => {
-  log.info('Received event from razeedash-api');
-  getSubscriptions();
+subscriptionClient.subscribe( (event) => {
+  log.info('Received event from razeedash-api', event);
+  if(event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.has_updates) { 
+    getSubscriptions();
+  } else {
+    log.error(`Received graphql error from event from ${API_HOST}/graphql`, event);
+  }
 }, (error) => {
   log.error(`Error creating a connection to ${API_HOST}/graphql`, error);
 });
