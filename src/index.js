@@ -6,6 +6,7 @@ const { subscriptionClient, getSubscriptions} = require('./subscriptions');
 const ORG_ID = process.env.RAZEE_ORG_ID;
 const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
+const RAZEE_TAGS = process.env.RAZEE_TAGS;
 
 if (!ORG_ID) {
   throw 'Please specify process.env.RAZEE_ORG_ID';
@@ -34,7 +35,9 @@ subscriptionClient.subscribe( (event) => {
 
 const init = async() => {
   const clusterResources = await getRemoteResources();
-  const razeeResults = await getSubscriptions();
+  // TODO: get a set of labels/tags from razeedash-api for this org_id instead of using RAZEE_TAGS
+  //       const res = await getTags();
+  const razeeResults = await getSubscriptions(RAZEE_TAGS);
 
   let subscriptions = [];
   if(razeeResults.data && razeeResults.data.subscriptionsByTag) {

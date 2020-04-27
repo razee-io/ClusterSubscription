@@ -12,7 +12,6 @@ const gql = require('graphql-tag');
 const ORG_ID = process.env.RAZEE_ORG_ID;
 const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
-const RAZEE_TAGS = process.env.RAZEE_TAGS;
 
 if (!ORG_ID) {
   throw 'Please specify process.env.RAZEE_ORG_ID';
@@ -69,13 +68,13 @@ const queryClient = new ApolloClient({
 });
 
 
-const getSubscriptions = async () => {
+const getSubscriptions = async (razeeTags) => {
   log.info('Fetching subscriptions');
   try {
     return queryClient.query({
       query: gql`
         query SubscriptionsByTags {
-          subscriptionsByTag(org_id: "${ORG_ID}", tags: "${RAZEE_TAGS}") {
+          subscriptionsByTag(org_id: "${ORG_ID}", tags: "${razeeTags}") {
             subscription_name
             subscription_uuid
             url
