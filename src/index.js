@@ -1,7 +1,7 @@
 const log = require('../lib/bunyan-api').createLogger('cluster-subscription');
 
-const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('./remoteResource');
-const { subscriptionClient, getSubscriptions} = require('./subscriptions');
+const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('../lib/remoteResource');
+const { subscriptionClient, getSubscriptions} = require('../lib/subscriptions');
 
 const ORG_ID = process.env.RAZEE_ORG_ID;
 const ORG_KEY = process.env.RAZEE_ORG_KEY;
@@ -37,11 +37,13 @@ const init = async() => {
   const clusterResources = await getRemoteResources();
   // TODO: get a set of labels/tags from razeedash-api for this org_id instead of using RAZEE_TAGS
   //       const res = await getTags();
+  // const razeeResults = await getSubscriptions(RAZEE_TAGS);
   const razeeResults = await getSubscriptions(RAZEE_TAGS);
 
   let subscriptions = [];
   if(razeeResults.data && razeeResults.data.subscriptionsByTag) {
     subscriptions = razeeResults.data.subscriptionsByTag;
+    log.debug('razee subscriptions', subscriptions);
     await createRemoteResources(subscriptions);
   }
 
