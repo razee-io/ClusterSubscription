@@ -23,6 +23,7 @@ if (!RAZEE_API) {
 // strip any trailing / from RAZEE_API
 const regex = /\/*$/gi;
 const API_HOST = RAZEE_API.replace(regex, '');
+// const API_HOST = process.env.MK_HOST.replace(regex, '');
 
 const API_VERSION = 'deploy.razee.io/v1alpha2';
 const KIND = 'RemoteResource';
@@ -38,56 +39,105 @@ const requestsTemplate = `{
 }`;
   
 const createRemoteResources = async (subscriptions) => {
-  const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
-  subscriptions.map( async sub => {
-    const url = `${API_HOST}/${sub.url}`;
-    const rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
-    const parsed = JSON.parse(rendered);
-    const resourceName = `clustersubscription-${sub.subscription_name}`;
-    const resourceTemplate = {
-      'apiVersion': API_VERSION,
-      'kind': KIND,
-      'metadata': {
-        'namespace': NAMESPACE,
-        'name': resourceName,
-        'labels': {
-          'razee/watch-resource': 'lite'
+  try {
+    const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
+    return Promise.all(subscriptions.map( async sub => {
+      const url = `${API_HOST}/${sub.url}`;
+      const rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
+      const parsed = JSON.parse(rendered);
+      const resourceName = `clustersubscription-${sub.subscription_name}`;
+      const resourceTemplate = {
+        'apiVersion': API_VERSION,
+        'kind': KIND,
+        'metadata': {
+          'namespace': NAMESPACE,
+          'name': resourceName,
+          'annotations': {
+            'deploy.razee.io/clustersubscription': sub.subscription_uuid
+          },
+          'labels': {
+            'razee/watch-resource': 'lite'
+          }
+        },
+        'spec': {
+          'requests': []
         }
-      },
-      'spec': {
-        'requests': []
-      }
-    };
-    resourceTemplate.spec.requests.push(parsed);
+      };
+      resourceTemplate.spec.requests.push(parsed);
 
-    const opt = { simple: false, resolveWithFullResponse: true };
+      const opt = { simple: false, resolveWithFullResponse: true };
 
-    const uri = krm.uri({ name: resourceName, namespace: NAMESPACE });
-    const get = await krm.get(resourceName, NAMESPACE, opt);
-    if (get.statusCode === 200) {
-    // the remote resource already exists so use mergePatch to apply the resource
-      log.info(`Attempting mergePatch for an existing resource ${uri}`);
-      const mergeResult = await krm.mergePatch(resourceName, NAMESPACE, resourceTemplate, opt);
-      if (mergeResult.statusCode === 200) {
-        log.info('mergePatch successful', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
+      const uri = krm.uri({ name: resourceName, namespace: NAMESPACE });
+      log.debug(resourceName);
+      const get = await krm.get(resourceName, NAMESPACE, opt);
+      if (get.statusCode === 200) {
+        // the remote resource already exists so use mergePatch to apply the resource
+        log.info(`Attempting mergePatch for an existing resource ${uri}`);
+        const mergeResult = await krm.mergePatch(resourceName, NAMESPACE, resourceTemplate, opt);
+        if (mergeResult.statusCode === 200) {
+          log.info('mergePatch successful', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
+        } else {
+          log.error('mergePatch error', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
+        }
+      } else if (get.statusCode === 404) {
+        // the remote resource does not exist so use post to apply the resource
+        log.info(`Attempting post for a new resource ${uri}`);
+        const postResult = await krm.post(resourceTemplate, opt);
+        if (postResult.statusCode === 200 || postResult.statusCode === 201) {
+          log.info('post successful', postResult.statusCode, postResult.statusMessage, postResult.body);
+        } else {
+          log.error('post error', postResult.statusCode, postResult.statusMessage, postResult.body);
+        }
       } else {
-        log.error('mergePatch error', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
+        log.error(`Get ${get.statusCode} ${uri}`);
       }
-    } else if (get.statusCode === 404) {
-    // the remote resource does not exist so use post to apply the resource
-      log.info(`Attempting post for a new resource ${uri}`);
-      const postResult = await krm.post(resourceTemplate, opt);
-      if (postResult.statusCode === 200 || postResult.statusCode === 201) {
-        log.info('post successful', postResult.statusCode, postResult.statusMessage, postResult.body);
-      } else {
-        log.error('post error', postResult.statusCode, postResult.statusMessage, postResult.body);
-      }
-    } else {
-      log.error(`Get ${get.statusCode} ${uri}`);
-    }
+    }));
 
-  });
+  } catch (error) {
+    log.error(error);
+  }
 
 };
 
+const deleteRemoteResources = async (selfLinks) => {
+  const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
+  try {
+    selfLinks.map( async (selfLink) => {
+      log.info(`Delete ${selfLink}`);
+      const opt = { uri: selfLink, simple: false, resolveWithFullResponse: true, method: 'DELETE' };
+      const res = await krm.request(opt);
+      if (res.statusCode === 404) {
+        log.info(`Delete ${res.statusCode} ${opt.uri}`);
+        return { statusCode: res.statusCode, body: res.body };
+      } else if (res.statusCode !== 200) {
+        log.info(`Delete ${res.statusCode} ${opt.uri}`);
+        return Promise.reject({ statusCode: res.statusCode, body: res.body });
+      }
+      log.info(`Delete ${res.statusCode} ${opt.uri}`);
+      return { statusCode: res.statusCode, body: res.body };
+    });
+  } catch (error) {
+    log.error(error);
+  }
+};
+
+const getRemoteResources = async () => {
+  let remoteResources = [];
+  try {
+    const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'get');
+    const opt = { simple: false, resolveWithFullResponse: true };
+    const get = await krm.get('', 'razeedeploy', opt);
+    if(get.statusCode === 200) {
+      remoteResources = get.body.items.filter( (item) => {
+        return item.metadata.annotations && item.metadata.annotations['deploy.razee.io/clustersubscription'];
+      });
+    }
+  } catch (error) {
+    log.error(error);
+  }
+  return remoteResources;
+};
+
 exports.createRemoteResources = createRemoteResources;
+exports.getRemoteResources = getRemoteResources;
+exports.deleteRemoteResources = deleteRemoteResources;

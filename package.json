@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/razee-io/ClusterSubscription#readme",
   "dependencies": {
-    "@razee/kubernetes-util": "0.0.10",
+    "@razee/kubernetes-util": "0.1.0",
     "apollo-boost": "^0.4.7",
     "apollo-cache-inmemory": "^1.6.5",
     "apollo-client": "^2.6.8",
