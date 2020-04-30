@@ -34,27 +34,45 @@ subscriptionClient.subscribe( (event) => {
 });
 
 const init = async() => {
+  // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
   const clusterResources = await getRemoteResources();
-  // TODO: get a set of labels/tags from razeedash-api for this org_id instead of using RAZEE_TAGS
-  //       const res = await getTags();
-  // const razeeResults = await getSubscriptions(RAZEE_TAGS);
-  const razeeResults = await getSubscriptions(RAZEE_TAGS);
+  log.debug('cluster remote resources:', clusterResources);
 
-  let subscriptions = [];
-  if(razeeResults.data && razeeResults.data.subscriptionsByTag) {
-    subscriptions = razeeResults.data.subscriptionsByTag;
-    log.debug('razee subscriptions', subscriptions);
+  // list of razee subscriptions for this org id
+  const res = await getSubscriptions(RAZEE_TAGS).catch( () => false );
+  const subscriptions = (res && res.data && res.data.subscriptionsByTag) ? res.data.subscriptionsByTag : false;
+  log.debug('razee subscriptions:', subscriptions);
+
+  // 
+  // Create remote resources
+  // 
+  if(subscriptions) {
     await createRemoteResources(subscriptions);
+    log.info('finished creating remote resources');
+  } else {
+    log.debug('no remote resources need to be created');
   }
 
-  const subscriptionUuids = subscriptions.map( (sub) => sub.subscription_uuid );
-  const invalidResources = clusterResources.filter( (rr) => {
-    return subscriptionUuids.includes(rr.metadata.annotations['deploy.razee.io/clustersubscription']) ? false : true;
-  });
+  // 
+  // Delete remote resources
+  // 
+  if(subscriptions && clusterResources && clusterResources.length > 0) {
+    log.info('looking for remote resources to delete...');
+    
+    const subscriptionUuids = subscriptions.map( (sub) => sub.subscription_uuid ); // uuids from razee
+    const invalidResources = clusterResources.filter( (rr) => {
+      // the annotation looks like: deploy.razee.io/clustersubscription: 89cd2717-c7f5-43d6-91a7-fd1ec44e1abb
+      return subscriptionUuids.includes(rr.metadata.annotations['deploy.razee.io/clustersubscription']) ? false : true;
+    });
  
-  const invalidSelfLinks = invalidResources.map( (resource) => resource.metadata.selfLink );
-  if(invalidSelfLinks.length > 0) {
-    await deleteRemoteResources(invalidSelfLinks);
+    const invalidSelfLinks = invalidResources.map( (resource) => resource.metadata.selfLink );
+    if(invalidSelfLinks.length > 0) {
+      await deleteRemoteResources(invalidSelfLinks);
+    } else {
+      log.debug('existing remote resources are valid. nothing to delete');
+    }
+  } else {
+    log.debug('no remote resources need to be deleted');
   }
 };
 
