@@ -31,8 +31,8 @@ subscriptionClient.subscribe( (event) => {
 
 const init = async() => {
   // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
-  // const clusterResources = await getRemoteResources();
-  // log.debug('cluster remote resources:', clusterResources);
+  const clusterResources = await getRemoteResources();
+  log.debug('cluster remote resources:', clusterResources);
 
   // // list of razee subscriptions for this org id
   const res = await getSubscriptions(RAZEE_TAGS).catch( () => false );
@@ -42,34 +42,34 @@ const init = async() => {
   // 
   // Create remote resources
   // 
-  // if(subscriptions) {
-  //   await createRemoteResources(subscriptions);
-  //   log.info('finished creating remote resources');
-  // } else {
-  //   log.debug('no remote resources need to be created');
-  // }
+  if(subscriptions) {
+    await createRemoteResources(subscriptions);
+    log.info('finished creating remote resources');
+  } else {
+    log.debug('no remote resources need to be created');
+  }
 
   // 
   // Delete remote resources
   // 
-  // if(subscriptions && clusterResources && clusterResources.length > 0) {
-  //   log.info('looking for remote resources to delete...');
+  if(subscriptions && clusterResources && clusterResources.length > 0) {
+    log.info('looking for remote resources to delete...');
     
-  //   const subscriptionUuids = subscriptions.map( (sub) => sub.subscription_uuid ); // uuids from razee
-  //   const invalidResources = clusterResources.filter( (rr) => {
-  //     // the annotation looks like: deploy.razee.io/clustersubscription: 89cd2717-c7f5-43d6-91a7-fd1ec44e1abb
-  //     return subscriptionUuids.includes(rr.metadata.annotations['deploy.razee.io/clustersubscription']) ? false : true;
-  //   });
+    const subscriptionUuids = subscriptions.map( (sub) => sub.subscription_uuid ); // uuids from razee
+    const invalidResources = clusterResources.filter( (rr) => {
+      // the annotation looks like: deploy.razee.io/clustersubscription: 89cd2717-c7f5-43d6-91a7-fd1ec44e1abb
+      return subscriptionUuids.includes(rr.metadata.annotations['deploy.razee.io/clustersubscription']) ? false : true;
+    });
  
-  //   const invalidSelfLinks = invalidResources.map( (resource) => resource.metadata.selfLink );
-  //   if(invalidSelfLinks.length > 0) {
-  //     await deleteRemoteResources(invalidSelfLinks);
-  //   } else {
-  //     log.debug('existing remote resources are valid. nothing to delete');
-  //   }
-  // } else {
-  //   log.debug('no remote resources need to be deleted');
-  // }
+    const invalidSelfLinks = invalidResources.map( (resource) => resource.metadata.selfLink );
+    if(invalidSelfLinks.length > 0) {
+      await deleteRemoteResources(invalidSelfLinks);
+    } else {
+      log.debug('existing remote resources are valid. nothing to delete');
+    }
+  } else {
+    log.debug('no remote resources need to be deleted');
+  }
 };
 
 init();
