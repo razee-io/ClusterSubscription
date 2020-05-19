@@ -42,11 +42,9 @@ const init = async() => {
   // 
   // Create remote resources
   // 
-  if(subscriptions) {
+  if(subscriptions && subscriptions.length > 0) {
     await createRemoteResources(subscriptions);
     log.info('finished creating remote resources');
-  } else {
-    log.debug('no remote resources need to be created');
   }
 
   // 
@@ -67,9 +65,7 @@ const init = async() => {
     } else {
       log.debug('existing remote resources are valid. nothing to delete');
     }
-  } else {
-    log.debug('no remote resources need to be deleted');
-  }
+  } 
 };
 
 init();
