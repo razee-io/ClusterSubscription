@@ -1,5 +1,5 @@
-const log = require('../lib/bunyan-api').createLogger('cluster-subscription');
 
+const log = require('../lib/log');
 const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('../lib/remoteResource');
 const { subscriptionClient, getSubscriptions } = require('../lib/subscriptions');
 
