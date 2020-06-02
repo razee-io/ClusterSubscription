@@ -23,21 +23,21 @@ subscriptionClient.subscribe( (event) => {
   if(event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.has_updates) { 
     init();
   } else {
-    log.error(`Received graphql error from ${API_HOST}/graphql`, event);
+    log.error(`Received graphql error from ${API_HOST}/graphql`, {'error': event});
   }
 }, (error) => {
-  log.error(`Error creating a connection to ${API_HOST}/graphql`, error);
+  log.error(`Error creating a connection to ${API_HOST}/graphql`, {error});
 });
 
 const init = async() => {
   // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
   const clusterResources = await getRemoteResources();
-  log.debug('cluster remote resources:', clusterResources);
+  log.debug('cluster remote resources:', {clusterResources});
 
   // // list of razee subscriptions for this org id
   const res = await getSubscriptions(RAZEE_TAGS).catch( () => false );
   const subscriptions = (res && res.data && res.data.subscriptionsByTag) ? res.data.subscriptionsByTag : false;
-  log.debug('razee subscriptions:', subscriptions);
+  log.debug('razee subscriptions', {subscriptions});
 
   // 
   // Create remote resources
