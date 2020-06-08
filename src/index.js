@@ -1,12 +1,7 @@
-const io = require('socket.io-client');
-const Mustache = require('mustache');
-const _ = require('lodash');
 
-const log = require('../lib/bunyan-api').createLogger('cluster-subscription');
-
-const { KubeClass, KubeApiConfig } = require('@razee/kubernetes-util');
-const kubeApiConfig = KubeApiConfig();
-const kc = new KubeClass(kubeApiConfig);
+const log = require('../lib/log');
+const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('../lib/remoteResource');
+const { subscriptionClient, getSubscriptions } = require('../lib/subscriptions');
 
 const ORG_KEY = process.env.RAZEE_ORG_KEY;
 const RAZEE_API = process.env.RAZEE_API;
@@ -23,98 +18,54 @@ if (!RAZEE_API) {
 const regex = /\/*$/gi;
 const API_HOST = RAZEE_API.replace(regex, '');
 
-const API_VERSION = 'deploy.razee.io/v1alpha2';
-const KIND = 'RemoteResource';
-const RESOURCE_NAME = 'clustersubscription-rr';
-const NAMESPACE = process.env.NAMESPACE;
-
-const socket = io(RAZEE_API, {
-  query: {
-    action: 'subscriptions',
-    'razee-org-key': ORG_KEY,
-    'tags': RAZEE_TAGS
-  },
-  transports: ['websocket']
-});
-
-socket.connect();
-
-// listen for subscription changes
-socket.on('subscriptions', async function (data) {
-  log.info('Received subscription data from razeeapi', data);
-
-  var urls = data.urls;
-  if (_.isArray(data)) {
-    urls = data;
-  }
-
-  const resourceTemplate = {
-    'apiVersion': API_VERSION,
-    'kind': KIND,
-    'metadata': {
-      'name': RESOURCE_NAME,
-      'namespace': NAMESPACE,
-      'labels': {
-        'razee/watch-resource': 'lite'
-      }
-    },
-    'spec': {
-      'requests': []
-    }
-  };
-
-  const requestsTemplate = `{
-    "options": {
-      "url": "{{{url}}}",
-      "headers": {
-        "razee-org-key": "{{orgKey}}"
-      }
-    }
-  }`;
-
-  urls.forEach(url => {
-    url = `${API_HOST}/${url}`;
-    let rendered = Mustache.render(requestsTemplate, { url: url, orgKey: ORG_KEY });
-    let parsed = JSON.parse(rendered);
-    resourceTemplate.spec.requests.push(parsed);
-  });
-
-  const krm = await kc.getKubeResourceMeta(API_VERSION, KIND, 'update');
-  const opt = { simple: false, resolveWithFullResponse: true };
-
-  const uri = krm.uri({ name: RESOURCE_NAME, namespace: NAMESPACE });
-  const get = await krm.get(RESOURCE_NAME, NAMESPACE, opt);
-  log.info(`Get ${get.statusCode} ${uri}`);
-  if (get.statusCode === 200) {
-    // the remote resource already exists so use mergePatch to apply the resource
-    const mergeResult = await krm.mergePatch(RESOURCE_NAME, NAMESPACE, resourceTemplate, opt);
-    if (mergeResult.statusCode === 200) {
-      log.info('mergePatch successful', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
-    } else {
-      log.error('mergePatch error', mergeResult.statusCode, mergeResult.statusMessage, mergeResult.body);
-    }
-  } else if (get.statusCode === 404) {
-    // the remote resource does not exist so use post to apply the resource
-    const postResult = await krm.post(resourceTemplate, opt);
-    if (postResult.statusCode === 200 || postResult.statusCode === 201) {
-      log.info('post successful', postResult.statusCode, postResult.statusMessage, postResult.body);
-    } else {
-      log.error('post error', postResult.statusCode, postResult.statusMessage, postResult.body);
-    }
+subscriptionClient.subscribe( (event) => {
+  log.info('Received an event from razeedash-api', event);
+  if(event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.has_updates) { 
+    init();
   } else {
-    log.error(`Get ${get.statusCode} ${uri}`);
+    log.error(`Received graphql error from ${API_HOST}/graphql`, {'error': event});
+  }
+}, (error) => {
+  log.error(`Error creating a connection to ${API_HOST}/graphql`, {error});
+});
+
+const init = async() => {
+  // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
+  const clusterResources = await getRemoteResources();
+  log.debug('cluster remote resources:', {clusterResources});
+
+  // // list of razee subscriptions for this org id
+  const res = await getSubscriptions(RAZEE_TAGS).catch( () => false );
+  const subscriptions = (res && res.data && res.data.subscriptionsByTag) ? res.data.subscriptionsByTag : false;
+  log.debug('razee subscriptions', {subscriptions});
+
+  // 
+  // Create remote resources
+  // 
+  if(subscriptions && subscriptions.length > 0) {
+    await createRemoteResources(subscriptions);
+    log.info('finished creating remote resources');
   }
 
-});
+  // 
+  // Delete remote resources
+  // 
+  if(subscriptions && clusterResources && clusterResources.length > 0) {
+    log.info('looking for remote resources to delete...');
+    
+    const subscriptionUuids = subscriptions.map( (sub) => sub.subscription_uuid ); // uuids from razee
+    const invalidResources = clusterResources.filter( (rr) => {
+      // the annotation looks like: deploy.razee.io/clustersubscription: 89cd2717-c7f5-43d6-91a7-fd1ec44e1abb
+      return subscriptionUuids.includes(rr.metadata.annotations['deploy.razee.io/clustersubscription']) ? false : true;
+    });
+ 
+    const invalidSelfLinks = invalidResources.map( (resource) => resource.metadata.selfLink );
+    if(invalidSelfLinks.length > 0) {
+      await deleteRemoteResources(invalidSelfLinks);
+    } else {
+      log.debug('existing remote resources are valid. nothing to delete');
+    }
+  } 
+};
 
-socket.on('connect', function () {
-  log.info('Client has connected to the server!');
-});
-
-socket.on('disconnect', function () {
-  log.info('The client has disconnected!');
-});
-
-socket.on('connect_error', (error) => {
-  log.error(error);
-});
+init();
