@@ -62,7 +62,7 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
 (async function() {
   const config = await getClusterConfig().catch( (error) => console.error(error) );
   const { razeeApi, apiKey, clusterId } = config;
-  log.debug(config);
+  log.debug({razeeApi, clusterId});
   if(razeeApi && apiKey && clusterId) {
     razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
     callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
