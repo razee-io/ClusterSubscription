@@ -38,6 +38,6 @@
     "markdownlint-cli": "^0.23.1",
     "mustache": "^4.0.1",
     "subscriptions-transport-ws": "^0.9.16",
-    "winston": "^3.2.1"
+    "winston": "^3.3.1"
   }
 }
