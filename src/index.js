@@ -1,7 +1,6 @@
 
 const log = require('../lib/log');
 const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('../lib/remoteResource');
-const { getClusterConfig } = require('../lib/cluster');
 const { webSocketClient } = require('../lib/websocket');
 const { getSubscriptionsByCluster } = require('../lib/queries');
 
@@ -59,15 +58,24 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
   } 
 };
 
-(async function() {
-  const config = await getClusterConfig().catch( (error) => console.error(error) );
-  const { razeeApi, apiKey, clusterId } = config;
+function main() {
+  const apiKey = process.env.RAZEE_ORG_KEY;	
+  const razeeApi = process.env.RAZEE_API;	
+  const clusterId = process.env.CLUSTER_ID;	
+  
+  if (!apiKey) {	
+    throw 'Please specify process.env.RAZEE_ORG_KEY';	
+  }	
+  if (!razeeApi) {	
+    throw 'Please specify process.env.RAZEE_API';	
+  }	
+  if (!clusterId) {	
+    throw 'Please specify process.env.CLUSTER_ID';	
+  }	
   log.debug({razeeApi, clusterId});
-  if(razeeApi && apiKey && clusterId) {
-    razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
-    callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
-  } else {
-    console.error('RAZEE_API, CLUSTER_ID and RAZEE_ORG_KEY must be supplied in a razee-identity configmap and secret');
-  }
 
-})().catch((error) => console.error(error));
+  razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
+  callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
+}
+
+main();
