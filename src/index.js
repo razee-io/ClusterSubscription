@@ -67,7 +67,7 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
     razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
     callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
   } else {
-    console.error('RAZEE_API, CLUSTER_ID and RAZEE_ORG_KEY must be supplied in a razee-cd configmap and secret');
+    console.error('RAZEE_API, CLUSTER_ID and RAZEE_ORG_KEY must be supplied in a razee-identity configmap and secret');
   }
 
 })().catch((error) => console.error(error));
