@@ -1,49 +1,39 @@
 
 const log = require('../lib/log');
 const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('../lib/remoteResource');
-const { subscriptionClient, getSubscriptions } = require('../lib/subscriptions');
+const { webSocketClient } = require('../lib/websocket');
+const { getSubscriptionsByCluster } = require('../lib/queries');
 
-const ORG_KEY = process.env.RAZEE_ORG_KEY;
-const RAZEE_API = process.env.RAZEE_API;
-const RAZEE_TAGS = process.env.RAZEE_TAGS;
+const razeeListener = async (razeeApi, apiKey, clusterId) => {
+  const wsClient = webSocketClient(razeeApi, apiKey);
+  wsClient.subscribe( (event) => {
+    log.info('Received an event from razeedash-api', event);
+    if(event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.has_updates) { 
+      callRazee(razeeApi, apiKey, clusterId);
+    } else {
+      log.error(`Received graphql error from ${razeeApi}/graphql`, {'error': event});
+    }
+  }, (error) => {
+    log.error(`Error creating a connection to ${razeeApi}/graphql`, {error});
+  });
+};
 
-if (!ORG_KEY) {
-  throw 'Please specify process.env.RAZEE_ORG_KEY';
-}
-if (!RAZEE_API) {
-  throw 'Please specify process.env.RAZEE_API';
-}
+const callRazee = async(razeeApi, apiKey, clusterId) => {
 
-// strip any trailing / from RAZEE_API
-const regex = /\/*$/gi;
-const API_HOST = RAZEE_API.replace(regex, '');
-
-subscriptionClient.subscribe( (event) => {
-  log.info('Received an event from razeedash-api', event);
-  if(event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.has_updates) { 
-    init();
-  } else {
-    log.error(`Received graphql error from ${API_HOST}/graphql`, {'error': event});
-  }
-}, (error) => {
-  log.error(`Error creating a connection to ${API_HOST}/graphql`, {error});
-});
-
-const init = async() => {
   // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
   const clusterResources = await getRemoteResources();
-  log.debug('cluster remote resources:', {clusterResources});
+  log.debug('remote resources on this cluster:', {clusterResources});
 
-  // // list of razee subscriptions for this org id
-  const res = await getSubscriptions(RAZEE_TAGS).catch( () => false );
-  const subscriptions = (res && res.data && res.data.subscriptionsByTag) ? res.data.subscriptionsByTag : false;
+  // list of razee subscriptions for this cluster
+  const res = await getSubscriptionsByCluster(razeeApi, apiKey, clusterId).catch( () => false );
+  const subscriptions = (res && res.data && res.data.subscriptionsByCluster) ? res.data.subscriptionsByCluster : false;
   log.debug('razee subscriptions', {subscriptions});
 
   // 
   // Create remote resources
   // 
   if(subscriptions && subscriptions.length > 0) {
-    await createRemoteResources(subscriptions);
+    await createRemoteResources(razeeApi, apiKey, subscriptions);
     log.info('finished creating remote resources');
   }
 
@@ -68,4 +58,24 @@ const init = async() => {
   } 
 };
 
-init();
+function main() {
+  const apiKey = process.env.RAZEE_ORG_KEY;	
+  const razeeApi = process.env.RAZEE_API;	
+  const clusterId = process.env.CLUSTER_ID;	
+  
+  if (!apiKey) {	
+    throw 'Please specify process.env.RAZEE_ORG_KEY';	
+  }	
+  if (!razeeApi) {	
+    throw 'Please specify process.env.RAZEE_API';	
+  }	
+  if (!clusterId) {	
+    throw 'Please specify process.env.CLUSTER_ID';	
+  }	
+  log.debug({razeeApi, clusterId});
+
+  razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
+  callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
+}
+
+main();

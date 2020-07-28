@@ -4,44 +4,30 @@ Subscribe to Razee controlled resources
 
 ## Install
 
-- Logon to your RazeeDash server and go to the manage org page.
-ie. `https://app.razee.io/stark-industries/org`
-- Install RazeeDeploy and ClusterSubscription in your cluster using the
+- Logon to your RazeeDash server and go to the manage org page
+  - ie. `https://app.razee.io/stark-industries/org`
+- Install ClusterSubscription in your cluster using the
 `Install Razee Agent` command on the org page.
   - ie. `kubectl apply -f "https://app.razee.io/api/install/razeedeploy-job?orgKey=orgApiKey-..."`
-- Edit the `clustersubscription` config map on your cluster(s) to add the
-RAZEE_TAGS that you want.
-  - `kubectl edit cm clustersubscription`
-  - `RAZEE_TAGS: 'comma,separated,tags,go,here'`
+- Verify that a `razee-identity` ConfigMap and Secret have been created on your cluster
 - Logon to your RazeeDash server and go to the `Deployables` page to create
-channels and subscriptions
+Cluster Groups, Channels and Subscriptions
 
 ## Environment Variables
 <!--Markdownlint-disable MD034-->
 <!--Markdownlint-disable MD013-->
 | Name | Required | Description |
 | ---- | -------- | ------------- |
-| RAZEE_API           | yes | The url to your razeedash-api. ex: http://api-host:8081|
-| RAZEE_ORG_KEY       | yes | The orgApiKey used to communicate with razeedash-api. ex: orgApiKey-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeer . You can find this value from your org page on RazeeDash. ex: https://your-razeedash/your-orgname/org|
-| RAZEE_TAGS          | yes | One or more comma-separated subscription tags which were defined in Razeedash  |
+| RAZEE_API           | yes | The url to your razeedash-api. ex: http://api-host:8081  Found in the `razee-identidy` ConfigMap|
+| RAZEE_ORG_KEY       | yes | The orgApiKey used to communicate with razeedash-api. ex: orgApiKey-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeer . Found in the `razee-identity` Secret|
+| CLUSTER_ID          | yes | The razee defined cluster id.  Found in the `razee-identity` ConfigMap|
 
-These variables should be set in a ConfigMap and Secret called `clustersubscription`
+### Upgrading to 3.0
 
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: clustersubscription
-data:
-  RAZEE_API: "http://api-host:8081"
-  RAZEE_TAGS: "tag1, tag2"
----
-apiVersion: v1
-kind: Secret
-metadata:
- name: clustersubscription
-data:
- RAZEE_ORG_KEY: "orgApiKey-...."
-```
-
-Updates to the ConfigMap and Secret require a restart of your `clustersubscription` pod
+- If you are upgrading existing clusters to the 3.0+ release of ClusterSubscription then you will need to create
+a `razee-identity` ConfigMap and Secret manually.  
+  - Logon to your RazeeDash server and go to the clusters page
+    - ie. `https://app.razee.io/stark-industries/clusters`
+  - Click a cluster name and go to the Details tab
+  - From there you will see the kubectl commands you can run to generate the `razee-identity` ConfigMap and Secret
+  - Now you can add this cluster to a Cluster Group from the Deployables page

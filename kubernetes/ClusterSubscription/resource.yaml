@@ -40,17 +40,17 @@ spec:
           - name: RAZEE_ORG_KEY
             valueFrom:
               secretKeyRef:
-                name: clustersubscription
+                name: razee-identity
                 key: RAZEE_ORG_KEY
-          - name: RAZEE_TAGS
-            valueFrom:
-              configMapKeyRef:
-                name: clustersubscription
-                key: RAZEE_TAGS
           - name: RAZEE_API
             valueFrom:
               configMapKeyRef:
-                name: clustersubscription
+                name: razee-identity
                 key: RAZEE_API
+          - name: CLUSTER_ID
+            valueFrom:
+              configMapKeyRef:
+                name: razee-identity
+                key: CLUSTER_ID
         imagePullPolicy: Always
         name: clustersubscription
