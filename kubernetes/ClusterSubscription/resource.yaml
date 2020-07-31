@@ -23,34 +23,38 @@ spec:
       name: clustersubscription
     spec:
       serviceAccountName: razeedeploy-sa
+      securityContext:
+        runAsUser: {{{NODE_USER_ID}}}
+        runAsGroup: {{{NODE_GROUP_ID}}}
+        fsGroup: {{{NODE_GROUP_ID}}}
       containers:
-      - image: "quay.io/razee/clustersubscription:{{TRAVIS_TAG}}"
-        resources:
-          limits:
-            memory: 200Mi
-            cpu: 100m
-          requests:
-            memory: 75Mi
-            cpu: 40m
-        env:
-          - name: NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: RAZEE_ORG_KEY
-            valueFrom:
-              secretKeyRef:
-                name: razee-identity
-                key: RAZEE_ORG_KEY
-          - name: RAZEE_API
-            valueFrom:
-              configMapKeyRef:
-                name: razee-identity
-                key: RAZEE_API
-          - name: CLUSTER_ID
-            valueFrom:
-              configMapKeyRef:
-                name: razee-identity
-                key: CLUSTER_ID
-        imagePullPolicy: Always
-        name: clustersubscription
+        - image: "quay.io/razee/clustersubscription:{{TRAVIS_TAG}}"
+          resources:
+            limits:
+              memory: 200Mi
+              cpu: 100m
+            requests:
+              memory: 75Mi
+              cpu: 40m
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: RAZEE_ORG_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: razee-identity
+                  key: RAZEE_ORG_KEY
+            - name: RAZEE_API
+              valueFrom:
+                configMapKeyRef:
+                  name: razee-identity
+                  key: RAZEE_API
+            - name: CLUSTER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: razee-identity
+                  key: CLUSTER_ID
+          imagePullPolicy: Always
+          name: clustersubscription
