@@ -39,5 +39,8 @@
     "mustache": "^4.0.1",
     "subscriptions-transport-ws": "^0.9.17",
     "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "npm-check-updates": "^7.0.2"
   }
 }
