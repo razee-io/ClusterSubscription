@@ -10,7 +10,7 @@
     "dockerlint": "npx dockerlint Dockerfile",
     "jsonlint": "npx jsonlint --quiet build/viewTemplate.json",
     "markdownlint": "npx markdownlint README.md docs/",
-    "yaml-lint": "npx yaml-lint kubernetes/FeatureFlagSetLD/*.yaml .travis.yml",
+    "yaml-lint": "npx yaml-lint kubernetes/**/*.yaml .travis.yml",
     "shellcheck": "npx shellcheck build/*.sh"
   },
   "repository": {
