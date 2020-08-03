@@ -13,22 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ################################################################################
-
-FROM node:alpine as buildImg
+#######################################
+# Build the preliminary image
+#######################################
+FROM node:lts-alpine as buildImg
 
 RUN apk update
 RUN apk --no-cache add gnupg python make curl
 
-RUN mkdir -p /usr/src/app
-ENV PATH="$PATH:/usr/src/app"
-WORKDIR /usr/src/app
-COPY . /usr/src/app
-RUN npm install --production --loglevel=warn
+USER node
+WORKDIR /home/node
 
-FROM node:alpine
-RUN apk add --upgrade --no-cache libssl1.1
-RUN mkdir -p /usr/src/app
-ENV PATH="$PATH:/usr/src/app"
-WORKDIR /usr/src/app
-COPY --from=buildImg /usr/src/app /usr/src/app
+COPY --chown=node . /home/node
+RUN npm install --production --loglevel=warn
+RUN node -v
+
+#######################################
+# Build the production image
+#######################################
+FROM node:lts-alpine
+
+USER node
+WORKDIR /home/node
+
+COPY --chown=node --from=buildImg /home/node /home/node
+
 CMD ["npm", "start"]
