@@ -5,11 +5,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "lint": "npx npm-run-all eslint dockerlint jsonlint markdownlint",
+    "lint": "npx npm-run-all eslint dockerlint jsonlint markdownlint yaml-lint shellcheck",
     "eslint": "npx eslint src/index.js",
     "dockerlint": "npx dockerlint Dockerfile",
     "jsonlint": "npx jsonlint --quiet build/viewTemplate.json",
-    "markdownlint": "npx markdownlint README.md docs/"
+    "markdownlint": "npx markdownlint README.md docs/",
+    "yaml-lint": "npx yaml-lint kubernetes/FeatureFlagSetLD/*.yaml .travis.yml",
+    "shellcheck": "npx shellcheck build/*.sh"
   },
   "repository": {
     "type": "git",
