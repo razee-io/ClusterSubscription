@@ -3,6 +3,7 @@ const log = require('../lib/log');
 const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('../lib/remoteResource');
 const { webSocketClient } = require('../lib/websocket');
 const { getSubscriptionsByCluster } = require('../lib/queries');
+const touch = require('touch');
 
 const razeeListener = async (razeeApi, apiKey, clusterId) => {
   const wsClient = webSocketClient(razeeApi, apiKey);
@@ -74,6 +75,7 @@ function main() {
   }	
   log.debug({razeeApi, clusterId});
 
+  setInterval(async () => touch('/tmp/healthy'), 60000); // used with the k8s readiness probe
   razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
   callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
 }

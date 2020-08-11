@@ -1,6 +1,6 @@
 {
   "name": "ClusterSubscription",
-  "version": "3.0.0",
+  "version": "3.0.3",
   "description": "Subscribe to razee controlled resources",
   "main": "index.js",
   "scripts": {
@@ -36,13 +36,14 @@
     "graphql-tag": "^2.11.0",
     "mustache": "^4.0.1",
     "subscriptions-transport-ws": "^0.9.17",
+    "touch": "^3.1.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
     "dockerlint": "^0.3.9",
-    "eslint": "^7.5.0",
+    "eslint": "^7.6.0",
     "jsonlint": "^1.6.3",
     "markdownlint-cli": "^0.23.2",
-    "npm-check-updates": "^7.0.2"
+    "npm-check-updates": "^7.0.4"
   }
 }

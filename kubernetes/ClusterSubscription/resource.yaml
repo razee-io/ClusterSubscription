@@ -36,6 +36,15 @@ spec:
             requests:
               memory: 75Mi
               cpu: 40m
+          livenessProbe:
+            exec:
+              command:
+                - sh/liveness.sh
+            initialDelaySeconds: 600
+            periodSeconds: 300
+            timeoutSeconds: 30
+            failureThreshold: 1
+            successThreshold: 1
           env:
             - name: NAMESPACE
               valueFrom:
