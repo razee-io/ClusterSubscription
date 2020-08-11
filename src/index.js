@@ -75,7 +75,7 @@ function main() {
   }	
   log.debug({razeeApi, clusterId});
 
-  setInterval(async () => touch('/tmp/healthy'), 60000); // used with the k8s readiness probe
+  setInterval(async () => await touch('/tmp/healthy'), 60000); // used with the k8s readiness probe
   razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
   callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
 }

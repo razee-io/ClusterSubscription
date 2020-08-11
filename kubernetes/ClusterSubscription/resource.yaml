@@ -40,7 +40,7 @@ spec:
             exec:
               command:
                 - sh/liveness.sh
-            initialDelaySeconds: 600
+            initialDelaySeconds: 300
             periodSeconds: 300
             timeoutSeconds: 30
             failureThreshold: 1
