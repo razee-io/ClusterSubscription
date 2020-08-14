@@ -9,7 +9,7 @@ const razeeListener = async (razeeApi, apiKey, clusterId) => {
   const wsClient = webSocketClient(razeeApi, apiKey);
   wsClient.subscribe( (event) => {
     log.info('Received an event from razeedash-api', event);
-    if(event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.has_updates) { 
+    if(event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.hasUpdates) { 
       callRazee(razeeApi, apiKey, clusterId);
     } else {
       log.error(`Received graphql error from ${razeeApi}/graphql`, {'error': event});
@@ -27,7 +27,7 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
 
   // list of razee subscriptions for this cluster
   const res = await getSubscriptionsByCluster(razeeApi, apiKey, clusterId).catch( () => false );
-  const subscriptions = (res && res.data && res.data.subscriptionsByCluster) ? res.data.subscriptionsByCluster : false;
+  const subscriptions = (res && res.data && res.data.subscriptionsByClusterId) ? res.data.subscriptionsByClusterId : false;
   log.debug('razee subscriptions', {subscriptions});
 
   // 
