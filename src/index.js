@@ -44,7 +44,7 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
   if(subscriptions && clusterResources && clusterResources.length > 0) {
     log.info('looking for remote resources to delete...');
     
-    const subscriptionUuids = subscriptions.map( (sub) => sub.subscription_uuid ); // uuids from razee
+    const subscriptionUuids = subscriptions.map( (sub) => sub.subscriptionUuid ); // uuids from razee
     const invalidResources = clusterResources.filter( (rr) => {
       // the annotation looks like: deploy.razee.io/clustersubscription: 89cd2717-c7f5-43d6-91a7-fd1ec44e1abb
       return subscriptionUuids.includes(rr.metadata.annotations['deploy.razee.io/clustersubscription']) ? false : true;
