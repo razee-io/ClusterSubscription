@@ -75,9 +75,11 @@ function main() {
   }	
   log.debug({razeeApi, clusterId});
 
+  const apiHost = razeeApi.replace(/\/*$/gi, ''); // strip any trailing /'s from razeeApi
+
   setInterval(async () => await touch('/tmp/healthy'), 60000); // used with the k8s readiness probe
-  razeeListener(razeeApi, apiKey, clusterId); // create a websocket connection to razee
-  callRazee(razeeApi, apiKey, clusterId); // query razee for updated subscriptions
+  razeeListener(apiHost, apiKey, clusterId); // create a websocket connection to razee
+  callRazee(apiHost, apiKey, clusterId); // query razee for updated subscriptions
 }
 
 main();
