@@ -22,7 +22,7 @@ const razeeListener = async (razeeApi, apiKey, clusterId) => {
 const callRazee = async(razeeApi, apiKey, clusterId) => {
 
   // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
-  const clusterResources = await getRemoteResources();
+  const clusterResources = await getRemoteResources(clusterId);
   log.debug('remote resources on this cluster:', {clusterResources});
 
   // list of razee subscriptions for this cluster
@@ -34,7 +34,7 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
   // Create remote resources
   // 
   if(subscriptions && subscriptions.length > 0) {
-    await createRemoteResources(razeeApi, apiKey, subscriptions);
+    await createRemoteResources(razeeApi, apiKey, subscriptions, clusterId);
     log.info('finished creating remote resources');
   }
 
