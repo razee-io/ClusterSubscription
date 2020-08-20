@@ -23,7 +23,6 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
 
   // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
   const clusterResources = await getRemoteResources(clusterId);
-  log.debug('remote resources on this cluster:', {clusterResources});
 
   // list of razee subscriptions for this cluster
   const res = await getSubscriptionsByCluster(razeeApi, apiKey, clusterId).catch( () => false );
@@ -80,6 +79,7 @@ function main() {
   setInterval(async () => await touch('/tmp/healthy'), 60000); // used with the k8s readiness probe
   razeeListener(apiHost, apiKey, clusterId); // create a websocket connection to razee
   callRazee(apiHost, apiKey, clusterId); // query razee for updated subscriptions
+  setInterval(() => callRazee(apiHost, apiKey, clusterId), 300000); // catch possible missed events from the websocket connection. issue #70
 }
 
 main();
