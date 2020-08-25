@@ -48,10 +48,9 @@ const callRazee = async(razeeApi, apiKey, clusterId) => {
       // the annotation looks like: deploy.razee.io/clustersubscription: 89cd2717-c7f5-43d6-91a7-fd1ec44e1abb
       return subscriptionUuids.includes(rr.metadata.annotations['deploy.razee.io/clustersubscription']) ? false : true;
     });
- 
-    const invalidSelfLinks = invalidResources.map( (resource) => resource.metadata.selfLink );
-    if(invalidSelfLinks.length > 0) {
-      await deleteRemoteResources(invalidSelfLinks);
+
+    if (invalidResources.length > 0) {
+      await deleteRemoteResources(invalidResources);
     } else {
       log.debug('existing remote resources are valid. nothing to delete');
     }
