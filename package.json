@@ -1,8 +1,9 @@
 {
-  "name": "ClusterSubscription",
-  "version": "3.0.8",
+  "name": "@razee/clustersubscription",
+  "version": "0.0.0-dev",
   "description": "Subscribe to razee controlled resources",
-  "main": "index.js",
+  "main": "./src/index.js",
+  "bin": "./bin/clustersubscription",
   "scripts": {
     "start": "node src/index.js",
     "lint": "npx npm-run-all eslint dockerlint jsonlint markdownlint yaml-lint shellcheck",
