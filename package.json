@@ -18,6 +18,9 @@
     "type": "git",
     "url": "git+https://github.com/razee-io/ClusterSubscription.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [],
   "author": "",
   "license": "Apache-2.0",
