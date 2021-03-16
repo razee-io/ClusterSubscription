@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "razeedeploy"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: razeedeploy-sa
+  namespace: "razeedeploy"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: razeedeploy-admin-cr
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- nonResourceURLs:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: razeedeploy-rb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: razeedeploy-admin-cr
+subjects:
+- kind: ServiceAccount
+  name: razeedeploy-sa
+  namespace: "razeedeploy"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "razeedeploy-job-1615231799265-1"
+  namespace: "razeedeploy"
+spec:
+  template:
+    spec:
+      serviceAccountName: razeedeploy-sa
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: "razeedeploy-job-1615231799265"
+        image: "quay.io/razee/razeedeploy-delta:2.4.1"
+        command: ["./bin/razeedeploy-delta", "install", "--namespace=razeedeploy"]
+        args: ["--clustersubscription=3.2.0","--mustachetemplate=0.11.0","--remoteresource=0.6.0","--encryptedresource=0.2.0","--watch-keeper=0.7.3","--razeedash-url=https://config.satellite.cloud.ibm.com/api/v2","--razeedash-org-key=orgApiKey-f60e9ef8-15e9-4a8d-a3de-663f36ac4b0d","--razeedash-cluster-id=dcd6b5ff-ec2d-4c4e-9602-4f779a3b64ac","--razeedash-cluster-metadata64=eyJuYW1lIjoidGVtcF9hIn0="]
+        # see README.md for args options. https://github.com/razee-io/razeedeploy-delta/blob/master/README.md
+      restartPolicy: Never
+  backoffLimit: 2
