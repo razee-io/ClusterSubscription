@@ -39,6 +39,7 @@
     "graphql": "^15.5.0",
     "graphql-tag": "^2.11.0",
     "mustache": "^4.1.0",
+    "object-path": "^0.11.5",
     "subscriptions-transport-ws": "^0.9.18",
     "touch": "^3.1.0",
     "winston": "^3.3.3"

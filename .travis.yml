@@ -12,43 +12,46 @@ script:
   # Audit npm packages. Fail build whan a PR audit fails, otherwise report the vulnerability and proceed.
   - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then npm audit; else npm audit || true; fi
   - npm run lint
+  - if [[ "${TRAVIS_TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then npm version --no-git-tag-version "${TRAVIS_TAG}"; fi
   - docker build --rm -t "quay.io/razee/clustersubscription:${TRAVIS_COMMIT}" .
   - if [ -n "${TRAVIS_TAG}" ]; then docker tag quay.io/razee/clustersubscription:${TRAVIS_COMMIT} quay.io/razee/clustersubscription:${TRAVIS_TAG}; fi
   - docker images
   - ./build/process-template.sh kubernetes/ClusterSubscription/resource.yaml >/tmp/resource.yaml
-  - if [[ "${TRAVIS_TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then npm version --no-git-tag-version "${TRAVIS_TAG}"; fi
 
 before_deploy:
   - docker login -u="${QUAY_ID}" -p="${QUAY_TOKEN}" quay.io
 
 deploy:
-  # Deploy alpha builds
+  # Publish npm package with tag "next" on release candidates
+  - provider: npm
+    email: "${NPMJS_EMAIL}"
+    api_key: "${NPMJS_API_KEY}"
+    tag: next
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: ${TRAVIS_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)$
+  # Publish docker image on release and release candidates
   - provider: script
     script: docker push "quay.io/razee/clustersubscription:${TRAVIS_TAG}"
     skip_cleanup: true
     on:
       tags: true
-      condition: ${TRAVIS_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+_[0-9]{3}$
-
-  # Deploy released builds
-  - provider: script
-    script: docker push "quay.io/razee/clustersubscription:${TRAVIS_TAG}"
+      condition: ${TRAVIS_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$
+  # Publish npm package as "latest" on release
+  - provider: npm
+    email: "${NPMJS_EMAIL}"
+    api_key: "${NPMJS_API_KEY}"
     skip_cleanup: true
     on:
       tags: true
       condition: ${TRAVIS_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+$
+  # Publish GitHub release assets on release
   - provider: releases
     file: /tmp/resource.yaml
     skip_cleanup: true
     api_key: "${GITHUB_TOKEN}"
     name: "${TRAVIS_TAG}"
-    on:
-      tags: true
-      condition: ${TRAVIS_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+$
-  - provider: npm
-    email: "${NPMJS_EMAIL}"
-    api_key: "${NPMJS_API_KEY}"
-    skip_cleanup: true
     on:
       tags: true
       condition: ${TRAVIS_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+$
