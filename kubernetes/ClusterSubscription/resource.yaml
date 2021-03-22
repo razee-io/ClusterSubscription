@@ -50,6 +50,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: USER_AGENT_NAME
+              value: razee.io/clustersubscription
+            - name: USER_AGENT_VERSION
+              value: "{{{TRAVIS_TAG}}}"
             - name: RAZEE_ORG_KEY
               valueFrom:
                 secretKeyRef:
