@@ -29,26 +29,26 @@
   },
   "homepage": "https://github.com/razee-io/ClusterSubscription#readme",
   "dependencies": {
-    "@razee/kubernetes-util": "0.2.3",
+    "@razee/kubernetes-util": "0.2.5",
     "apollo-boost": "^0.4.9",
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
     "apollo-link-http": "^1.5.17",
     "apollo-link-ws": "^1.0.20",
     "cross-fetch": "^3.1.4",
-    "graphql": "^15.5.0",
-    "graphql-tag": "^2.11.0",
+    "graphql": "^15.5.1",
+    "graphql-tag": "^2.12.5",
     "mustache": "^4.2.0",
     "object-path": "^0.11.5",
-    "subscriptions-transport-ws": "^0.9.18",
+    "subscriptions-transport-ws": "^0.9.19",
     "touch": "^3.1.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
     "dockerlint": "^0.3.9",
-    "eslint": "^7.25.0",
+    "eslint": "^7.32.0",
     "jsonlint": "^1.6.3",
-    "markdownlint-cli": "^0.27.1",
-    "npm-check-updates": "^11.5.3"
+    "markdownlint-cli": "^0.28.1",
+    "npm-check-updates": "^11.8.3"
   }
 }
