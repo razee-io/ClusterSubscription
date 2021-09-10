@@ -73,7 +73,7 @@ function main() {
     throw 'Please specify process.env.CLUSTER_ID';
   }
   if (razeeUpdateInterval < 60000) {
-    throw 'Please use a value greater than 60000';
+    throw `Please use a value greater than or equal to 60000. RAZEE_UPDATE_INTERVAL_MS=${RAZEE_UPDATE_INTERVAL_MS}`;
   }
   log.debug({ razeeApi, clusterId, razeeUpdateInterval });
 
