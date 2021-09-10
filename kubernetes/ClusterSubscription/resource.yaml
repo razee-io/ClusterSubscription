@@ -69,5 +69,11 @@ spec:
                 configMapKeyRef:
                   name: razee-identity
                   key: CLUSTER_ID
+            - name: RAZEE_UPDATE_INTERVAL_MS
+                valueFrom:
+                  configMapKeyRef:
+                    name: razee-identity
+                    key: RAZEE_UPDATE_INTERVAL_MS
+                    optional: true
           imagePullPolicy: Always
           name: clustersubscription

@@ -61,6 +61,7 @@ function main() {
   const apiKey = process.env.RAZEE_ORG_KEY;
   const razeeApi = process.env.RAZEE_API;
   const clusterId = process.env.CLUSTER_ID;
+  const razeeUpdateInterval = Number.parseInt(process.env.RAZEE_UPDATE_INTERVAL_MS, 10) || 300000;
 
   if (!apiKey) {
     throw 'Please specify process.env.RAZEE_ORG_KEY';
@@ -71,14 +72,17 @@ function main() {
   if (!clusterId) {
     throw 'Please specify process.env.CLUSTER_ID';
   }
-  log.debug({ razeeApi, clusterId });
+  if (razeeUpdateInterval < 60000) {
+    throw 'Please use a value greater than 60000';
+  }
+  log.debug({ razeeApi, clusterId, razeeUpdateInterval });
 
   const apiHost = razeeApi.replace(/\/*$/gi, ''); // strip any trailing /'s from razeeApi
 
   setInterval(async () => await touch('/tmp/liveness'), 60000); // used with the k8s liveness probe
   razeeListener(apiHost, apiKey, clusterId); // create a websocket connection to razee
   callRazee(apiHost, apiKey, clusterId); // query razee for updated subscriptions
-  setInterval(() => callRazee(apiHost, apiKey, clusterId), 300000); // catch possible missed events from the websocket connection. issue #70
+  setInterval(() => callRazee(apiHost, apiKey, clusterId), razeeUpdateInterval); // catch possible missed events from the websocket connection. issue #70
 }
 
 function createEventListeners() {

@@ -18,9 +18,10 @@ Cluster Groups, Channels and Subscriptions
 <!--Markdownlint-disable MD013-->
 | Name | Required | Description |
 | ---- | -------- | ------------- |
-| RAZEE_API           | yes | The url to your razeedash-api. ex: http://api-host:8081  Found in the `razee-identidy` ConfigMap|
-| RAZEE_ORG_KEY       | yes | The orgApiKey used to communicate with razeedash-api. ex: orgApiKey-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeer . Found in the `razee-identity` Secret|
-| CLUSTER_ID          | yes | The razee defined cluster id.  Found in the `razee-identity` ConfigMap|
+| RAZEE_API                | yes | The url to your razeedash-api. ex: http://api-host:8081  Found in the `razee-identidy` ConfigMap|
+| RAZEE_ORG_KEY            | yes | The orgApiKey used to communicate with razeedash-api. ex: orgApiKey-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeer . Found in the `razee-identity` Secret|
+| CLUSTER_ID               | yes | The razee defined cluster id.  Found in the `razee-identity` ConfigMap|
+| RAZEE_UPDATE_INTERVAL_MS | no  | (Optional) The razee defined update interval in ms and should be larger than 60000.  Found in the `razee-identity` ConfigMap|
 
 ### Upgrading to 3.0
 
