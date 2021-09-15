@@ -61,7 +61,7 @@ function main() {
   const apiKey = process.env.RAZEE_ORG_KEY;
   const razeeApi = process.env.RAZEE_API;
   const clusterId = process.env.CLUSTER_ID;
-  const razeeUpdateInterval = Number.parseInt(process.env.RAZEE_UPDATE_INTERVAL_MS, 10) || 300000;
+  let razeeUpdateInterval = Number.parseInt(process.env.RAZEE_UPDATE_INTERVAL_MS, 10) || 300000;
 
   if (!apiKey) {
     throw 'Please specify process.env.RAZEE_ORG_KEY';
@@ -73,7 +73,8 @@ function main() {
     throw 'Please specify process.env.CLUSTER_ID';
   }
   if (razeeUpdateInterval < 60000) {
-    throw `Please use a value greater than or equal to 60000. RAZEE_UPDATE_INTERVAL_MS=${RAZEE_UPDATE_INTERVAL_MS}`;
+    razeeUpdateInterval = 60000;
+    console.log(`Defaulting to 60000, use a value greater than or equal to 60000. RAZEE_UPDATE_INTERVAL_MS=${process.env.RAZEE_UPDATE_INTERVAL_MS} -> ${razeeUpdateInterval}`);
   }
   log.debug({ razeeApi, clusterId, razeeUpdateInterval });
 
