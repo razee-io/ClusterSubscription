@@ -6,7 +6,7 @@ services:
   - docker
 
 before_install:
-  - echo "$DOCKERHUB_TOKEN" | docker login -u "icdevops" --password-stdin
+  - if [ -n "${DOCKERHUB_TOKEN}" ]; then echo "$DOCKERHUB_TOKEN" | docker login -u "icdevops" --password-stdin; fi
   
 script:
   # Audit npm packages. Fail build whan a PR audit fails, otherwise report the vulnerability and proceed.
