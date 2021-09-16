@@ -70,10 +70,10 @@ spec:
                   name: razee-identity
                   key: CLUSTER_ID
             - name: RAZEE_UPDATE_INTERVAL_MS
-                valueFrom:
-                  configMapKeyRef:
-                    name: clustersubscription-overrides
-                    key: RAZEE_UPDATE_INTERVAL_MS
-                    optional: true
+              valueFrom:
+                configMapKeyRef:
+                  name: clustersubscription-overrides
+                  key: RAZEE_UPDATE_INTERVAL_MS
+                  optional: true
           imagePullPolicy: Always
           name: clustersubscription
