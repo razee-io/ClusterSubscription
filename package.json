@@ -6,7 +6,7 @@
   "bin": "./bin/clustersubscription",
   "scripts": {
     "start": "node src/index.js",
-    "lint": "npx npm-run-all eslint dockerlint jsonlint markdownlint yaml-lint shellcheck",
+    "lint": "npx npm-run-all --npm-path npm eslint dockerlint jsonlint markdownlint yaml-lint shellcheck",
     "eslint": "npx eslint src/index.js",
     "dockerlint": "npx dockerlint Dockerfile",
     "jsonlint": "npx jsonlint --quiet build/viewTemplate.json",
