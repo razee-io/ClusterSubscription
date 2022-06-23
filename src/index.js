@@ -7,10 +7,7 @@ const touch = require('touch');
 const Config = require('./Config');
 
 const razeeListener = async (razeeApi, clusterId) => {
-  const wsClientSubscription = webSocketClient(razeeApi);
-  const client = wsClientSubscription.client;
-  const subscription = wsClientSubscription.subscription
-  subscription.subscribe((event) => {
+  webSocketClient(razeeApi).subscribe((event) => {
     log.info('Received an event from razeedash-api', event);
     if (event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.hasUpdates) {
       callRazee(razeeApi, clusterId);
@@ -20,8 +17,6 @@ const razeeListener = async (razeeApi, clusterId) => {
   }, (error) => {
     log.error(`Error creating a connection to ${razeeApi}/graphql`, { error });
   });
-
-  return client;
 };
 
 const callRazee = async (razeeApi, clusterId) => {
@@ -62,18 +57,23 @@ const callRazee = async (razeeApi, clusterId) => {
   }
 };
 
-function main() {
+async function main() {
   await Config.init();
 
-  if (!Config.orgKey) {
+  const apiKey = Config.orgKey;
+  const razeeApi = Config.razeeApi;
+  const clusterId = Config.clusterId;
+
+  if (!apiKey) {
     throw 'RAZEE_ORG_KEY is missing';
   }
-  if (!Config.razeeApi) {
+  if (!razeeApi) {
     throw 'RAZEE_API is missing';
   }
-  if (!Config.clusterId) {
+  if (!clusterId) {
     throw 'CLUSTER_ID is missing';
   }
+
   log.debug({ razeeApi, clusterId });
 
   const apiHost = Config.razeeApi.replace(/\/*$/gi, ''); // strip any trailing /'s from razeeApi
