@@ -4,13 +4,13 @@ const { createRemoteResources, getRemoteResources, deleteRemoteResources } = req
 const { webSocketClient } = require('../lib/websocket');
 const { getSubscriptionsByCluster } = require('../lib/queries');
 const touch = require('touch');
+const Config = require('./Config');
 
-const razeeListener = async (razeeApi, apiKey, clusterId) => {
-  const wsClient = webSocketClient(razeeApi, apiKey);
-  wsClient.subscribe((event) => {
+const razeeListener = async (razeeApi, clusterId) => {
+  webSocketClient(razeeApi).subscribe((event) => {
     log.info('Received an event from razeedash-api', event);
     if (event.data && event.data.subscriptionUpdated && event.data.subscriptionUpdated.hasUpdates) {
-      callRazee(razeeApi, apiKey, clusterId);
+      callRazee(razeeApi, clusterId);
     } else {
       log.error(`Received graphql error from ${razeeApi}/graphql`, { 'error': event });
     }
@@ -19,13 +19,13 @@ const razeeListener = async (razeeApi, apiKey, clusterId) => {
   });
 };
 
-const callRazee = async (razeeApi, apiKey, clusterId) => {
+const callRazee = async (razeeApi, clusterId) => {
 
   // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
   const clusterResources = await getRemoteResources(clusterId);
 
   // list of razee subscriptions for this cluster
-  const res = await getSubscriptionsByCluster(razeeApi, apiKey, clusterId).catch(() => false);
+  const res = await getSubscriptionsByCluster(razeeApi, Config.orgKey, clusterId).catch(() => false);
   const subscriptions = (res && res.data && res.data.subscriptionsByClusterId) ? res.data.subscriptionsByClusterId : false;
   log.debug('razee subscriptions', { subscriptions });
 
@@ -33,11 +33,11 @@ const callRazee = async (razeeApi, apiKey, clusterId) => {
   // Create remote resources
   // 
   if (subscriptions && subscriptions.length > 0) {
-    await createRemoteResources(razeeApi, apiKey, subscriptions, clusterId);
+    await createRemoteResources(razeeApi, Config.orgKey, subscriptions, clusterId);
     log.info('finished creating remote resources');
   }
 
-  // 
+  //
   // Delete remote resources
   // 
   if (subscriptions && clusterResources && clusterResources.length > 0) {
@@ -57,28 +57,31 @@ const callRazee = async (razeeApi, apiKey, clusterId) => {
   }
 };
 
-function main() {
-  const apiKey = process.env.RAZEE_ORG_KEY;
-  const razeeApi = process.env.RAZEE_API;
-  const clusterId = process.env.CLUSTER_ID;
+async function main() {
+  await Config.init();
+
+  const apiKey = Config.orgKey;
+  const razeeApi = Config.razeeApi;
+  const clusterId = Config.clusterId;
 
   if (!apiKey) {
-    throw 'Please specify process.env.RAZEE_ORG_KEY';
+    throw 'RAZEE_ORG_KEY is missing';
   }
   if (!razeeApi) {
-    throw 'Please specify process.env.RAZEE_API';
+    throw 'RAZEE_API is missing';
   }
   if (!clusterId) {
-    throw 'Please specify process.env.CLUSTER_ID';
+    throw 'CLUSTER_ID is missing';
   }
+
   log.debug({ razeeApi, clusterId });
 
-  const apiHost = razeeApi.replace(/\/*$/gi, ''); // strip any trailing /'s from razeeApi
+  const apiHost = Config.razeeApi.replace(/\/*$/gi, ''); // strip any trailing /'s from razeeApi
 
   setInterval(async () => await touch('/tmp/liveness'), 60000); // used with the k8s liveness probe
-  razeeListener(apiHost, apiKey, clusterId); // create a websocket connection to razee
-  callRazee(apiHost, apiKey, clusterId); // query razee for updated subscriptions
-  setInterval(() => callRazee(apiHost, apiKey, clusterId), 300000); // catch possible missed events from the websocket connection. issue #70
+  razeeListener(apiHost, Config.clusterId); // create a websocket connection to razee
+  callRazee(apiHost, Config.clusterId); // query razee for updated subscriptions
+  setInterval(() => callRazee(apiHost, Config.clusterId), 300000); // catch possible missed events from the websocket connection. issue #70
 }
 
 function createEventListeners() {
@@ -101,7 +104,6 @@ async function run() {
   } catch (error) {
     log.error(error);
   }
-
 }
 
 module.exports = {
