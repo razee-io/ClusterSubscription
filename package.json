@@ -6,6 +6,7 @@
   "bin": "./bin/clustersubscription",
   "scripts": {
     "start": "node src/index.js",
+    "snifftest": " ((./bin/clustersubscription) || if [ $? = 50 ]; then echo 'code executed normally (expected error), snifftest passed' & exit 0; else echo 'code failed to execute, snifftest failed' & exit 1; fi)",
     "lint": "npx npm-run-all --npm-path npm eslint dockerlint jsonlint markdownlint yaml-lint shellcheck",
     "eslint": "npx eslint src/index.js",
     "dockerlint": "npx dockerlint Dockerfile",
@@ -40,6 +41,7 @@
     "graphql-tag": "^2.12.6",
     "mustache": "^4.2.0",
     "object-path": "^0.11.8",
+    "p-limit": "^3.1.0",
     "subscriptions-transport-ws": "^0.9.19",
     "touch": "^3.1.0",
     "winston": "^3.6.0",
