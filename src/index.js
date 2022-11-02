@@ -29,9 +29,9 @@ const callRazee = async (razeeApi, clusterId) => {
   const subscriptions = (res && res.data && res.data.subscriptionsByClusterId) ? res.data.subscriptionsByClusterId : false;
   log.debug('razee subscriptions', { subscriptions });
 
-  // 
+  //
   // Create remote resources
-  // 
+  //
   if (subscriptions && subscriptions.length > 0) {
     await createRemoteResources(razeeApi, Config.orgKey, subscriptions, clusterId);
     log.info('finished creating remote resources');
@@ -39,7 +39,7 @@ const callRazee = async (razeeApi, clusterId) => {
 
   //
   // Delete remote resources
-  // 
+  //
   if (subscriptions && clusterResources && clusterResources.length > 0) {
     log.info('looking for remote resources to delete...');
 
@@ -103,6 +103,7 @@ async function run() {
     await main();
   } catch (error) {
     log.error(error);
+    process.exit( 50 ); // 50 used to determine caught error exit (as opposed to module load errors which will exit with 1 before `run()` can even execute).  Used by 'snifftest' in package.json.
   }
 }
 
