@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node src/index.js",
     "snifftest": " ((./bin/clustersubscription) || if [ $? = 50 ]; then echo 'code executed normally (expected error), snifftest passed' & exit 0; else echo 'code failed to execute, snifftest failed' & exit 1; fi)",
+    "test": "nyc --reporter=html --all --reporter=text mocha ",
+    "check-coverage": "nyc check-coverage --statements 0 --branches 0 --functions 0 --lines 0",
     "lint": "npx npm-run-all --npm-path npm eslint dockerlint jsonlint markdownlint yaml-lint shellcheck",
     "eslint": "npx eslint src/index.js",
     "dockerlint": "npx dockerlint Dockerfile",
@@ -48,7 +50,10 @@
     "chokidar": "^3.5.3"
   },
   "devDependencies": {
+    "chai": "^4.3.6",
     "dockerlint": "^0.3.9",
+    "mocha": "^10.0.0",
+    "nyc": "^15.1.0",
     "eslint": "^8.11.0"
   }
 }
