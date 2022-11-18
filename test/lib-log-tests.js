@@ -1,6 +1,6 @@
 const assert = require('chai').assert;
 
-describe('logger', function () {
+describe('lib/log', function () {
   afterEach(function () {
     delete require.cache[require.resolve('../lib/log')];
   });

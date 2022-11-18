@@ -68,3 +68,4 @@ local
 .nvmrc
 .vscode
 .DS_Store
+envs
