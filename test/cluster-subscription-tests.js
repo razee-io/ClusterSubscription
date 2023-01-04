@@ -164,22 +164,26 @@ describe('#ClusterSubscriptionTests', async function() {
   };
 
   it('Create remote resource', async function() {
+    // with a generic subscription, should create a generic rr with razee-org-key secret
     await rr_rewired.createRemoteResources(razeeApi, apiKey, [sub], clusterId);
     assert.deepEqual(applied[0], secret);
     assert.deepEqual(applied[1], rr);
   });
 
   it('Create git remote resource', async function() {
+    // for remote subscription with auth, should create git rr with provided parmeters and include Authorization header
     await rr_rewired.createRemoteResources(razeeApi, apiKey, [subRemote], clusterId);
     assert.deepEqual(applied[1], rrGit);
   });
 
   it('Create git remote resource without auth', async function() {
+    // for remote subscription without auth, should create git rr with provided parmeters and not include Authorization header
     await rr_rewired.createRemoteResources(razeeApi, apiKey, [subRemoteNoAuth], clusterId);
     assert.deepEqual(applied[1], rrGitNoAuth);
   });
 
   it('Multiple subs', async function() {
+    // should be able to handle multiple subscriptions and create the correct rr based on subscription type
     await rr_rewired.createRemoteResources(razeeApi, apiKey, [sub, subRemote, subRemoteNoAuth], clusterId);
     assert.deepEqual(applied[0], secret);
     assert.deepEqual(applied[3], rr);
