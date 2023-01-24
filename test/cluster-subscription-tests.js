@@ -153,7 +153,9 @@ describe('#ClusterSubscriptionTests', async function() {
         }
       },
       requests: [ {
-        url: 'dummyUrl-s3',
+        options: {
+          url: 'dummyUrl-s3',
+        }
       } ]
     }
   };
@@ -243,7 +245,7 @@ describe('#ClusterSubscriptionTests', async function() {
   it('Multiple subs', async function() {
     // should be able to handle multiple subscriptions and create the correct rr based on subscription type
     await rr_rewired.createRemoteResources(razeeApi, apiKey, [sub, subRemoteS3, subRemoteGit, subRemoteGitNoAuth], clusterId);
-    assert.deepEqual(applied[0], secret);
+    assert.deepEqual(applied[0], secretRazee);
     assert.deepEqual(applied[4], rrRazee);
     assert.deepEqual(applied[5], rrS3);
     assert.deepEqual(applied[6], rrGit);
