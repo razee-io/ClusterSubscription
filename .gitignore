@@ -4,3 +4,5 @@ node_modules
 .nvmrc
 .vscode
 .npmrc
+.nyc_output
+coverage

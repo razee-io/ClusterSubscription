@@ -13,6 +13,7 @@ script:
   - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then npm audit; else npm audit || true; fi
   - npm run lint
   - npm run snifftest
+  - npm run test
   - if [[ "${TRAVIS_TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then npm version --no-git-tag-version "${TRAVIS_TAG}"; fi
   - docker build --rm -t "quay.io/razee/clustersubscription:${TRAVIS_COMMIT}" .
   - if [ -n "${TRAVIS_TAG}" ]; then docker tag quay.io/razee/clustersubscription:${TRAVIS_COMMIT} quay.io/razee/clustersubscription:${TRAVIS_TAG}; fi
