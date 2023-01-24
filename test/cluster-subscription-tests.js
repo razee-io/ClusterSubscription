@@ -21,7 +21,7 @@ describe('#ClusterSubscriptionTests', async function() {
   const apiKey = 'testApiKey';
   const clusterId = 'testClusterId';
 
-  const sub = {
+  const subRazee = {
     subscriptionName: 'testSubName',
     subscriptionUuid: 'testSubUuid',
     url: 'api/v1/channels/testConfigName/uuid',
@@ -219,7 +219,7 @@ describe('#ClusterSubscriptionTests', async function() {
 
   it('Create razee remote resource', async function() {
     // with a razee subscription, should create a generic rr with razee-org-key secret
-    await rr_rewired.createRemoteResources(razeeApi, apiKey, [sub], clusterId);
+    await rr_rewired.createRemoteResources(razeeApi, apiKey, [subRazee], clusterId);
     assert.deepEqual(applied[0], secretRazee);
     assert.deepEqual(applied[1], rrRazee);
   });
@@ -244,7 +244,7 @@ describe('#ClusterSubscriptionTests', async function() {
 
   it('Multiple subs', async function() {
     // should be able to handle multiple subscriptions and create the correct rr based on subscription type
-    await rr_rewired.createRemoteResources(razeeApi, apiKey, [sub, subRemoteS3, subRemoteGit, subRemoteGitNoAuth], clusterId);
+    await rr_rewired.createRemoteResources(razeeApi, apiKey, [subRazee, subRemoteS3, subRemoteGit, subRemoteGitNoAuth], clusterId);
     assert.deepEqual(applied[0], secretRazee);
     assert.deepEqual(applied[4], rrRazee);
     assert.deepEqual(applied[5], rrS3);
