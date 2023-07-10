@@ -1,4 +1,3 @@
-
 const log = require('../lib/log');
 const { createRemoteResources, getRemoteResources, deleteRemoteResources } = require('../lib/remoteResource');
 const { webSocketClient } = require('../lib/websocket');
