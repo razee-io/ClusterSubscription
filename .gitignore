@@ -6,3 +6,6 @@ node_modules
 .npmrc
 .nyc_output/
 coverage/
+
+# MEND unified agent
+wss-unified-agent.jar
