@@ -12,14 +12,14 @@ const kc = new KubeClass();
 // Read from razee-identity secret dynamically (rather than mounting as a volume and reading from a file) to satisfy scenarios where this operator is run on a separate cluster
 const getOrgKey = async () => {
   const krm = await kc.getKubeResourceMeta('v1', 'Secret', 'get');
-  const res = await krm.request({ uri: `/api/v1/namespaces/razeedeploy/secrets/razee-identity`, json: true });
+  const res = await krm.request({ uri: '/api/v1/namespaces/razeedeploy/secrets/razee-identity', json: true });
   let base64KeyData = objectPath.get(res, ['data', 'RAZEE_ORG_KEY']);
   if (base64KeyData === undefined) {
-    throw new Error(`razeedeploy/razee-identity secret does not contain RAZEE_ORG_KEY`);
+    throw new Error('razeedeploy/razee-identity secret does not contain RAZEE_ORG_KEY');
   }
   let secret = Buffer.from(base64KeyData, 'base64');
   return secret.toString();
-}
+};
 
 const razeeListener = async (razeeApi, clusterId) => {
   webSocketClient(razeeApi).subscribe((event) => {
@@ -41,7 +41,7 @@ const callRazee = async (razeeApi, clusterId) => {
   }
   catch(e) {
     log.info(`RAZEE_ORG_KEY could not be read from the razeedeploy/razee-identity secret (falling back to env var): ${e.message}`);
-    orgKey = process.env.RAZEE_ORG_KEY
+    orgKey = process.env.RAZEE_ORG_KEY;
   }
   if (!orgKey) {
     throw 'RAZEE_ORG_KEY is missing';
