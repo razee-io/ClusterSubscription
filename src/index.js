@@ -5,6 +5,22 @@ const { getSubscriptionsByCluster } = require('../lib/queries');
 const touch = require('touch');
 const Config = require('./Config');
 
+const objectPath = require('object-path');
+const { KubeClass } = require('@razee/kubernetes-util');
+const kc = new KubeClass();
+
+// Read from razee-identity secret dynamically (rather than mounting as a volume and reading from a file) to satisfy scenarios where this operator is run on a separate cluster
+const getOrgKey = async () => {
+  const krm = await kc.getKubeResourceMeta('v1', 'Secret', 'get');
+  const res = await krm.request({ uri: `/api/v1/namespaces/razeedeploy/secrets/razee-identity`, json: true });
+  let base64KeyData = objectPath.get(res, ['data', 'RAZEE_ORG_KEY']);
+  if (base64KeyData === undefined) {
+    throw new Error(`razeedeploy/razee-identity secret does not contain RAZEE_ORG_KEY`);
+  }
+  let secret = Buffer.from(base64KeyData, 'base64');
+  return secret.toString();
+}
+
 const razeeListener = async (razeeApi, clusterId) => {
   webSocketClient(razeeApi).subscribe((event) => {
     log.info('Received an event from razeedash-api', event);
@@ -19,12 +35,23 @@ const razeeListener = async (razeeApi, clusterId) => {
 };
 
 const callRazee = async (razeeApi, clusterId) => {
+  let orgKey;
+  try {
+    orgKey = await getOrgKey();
+  }
+  catch(e) {
+    log.info(`RAZEE_ORG_KEY could not be read from the razeedeploy/razee-identity secret (falling back to env var): ${e.message}`);
+    orgKey = process.env.RAZEE_ORG_KEY
+  }
+  if (!orgKey) {
+    throw 'RAZEE_ORG_KEY is missing';
+  }
 
   // rr's on this cluster with the 'deploy.razee.io/clustersubscription' annotation
   const clusterResources = await getRemoteResources(clusterId);
 
   // list of razee subscriptions for this cluster
-  const res = await getSubscriptionsByCluster(razeeApi, Config.orgKey, clusterId).catch(() => false);
+  const res = await getSubscriptionsByCluster(razeeApi, orgKey, clusterId).catch(() => false);
   const subscriptions = (res && res.data && res.data.subscriptionsByClusterId) ? res.data.subscriptionsByClusterId : false;
   log.debug('razee subscriptions', { subscriptions });
 
@@ -32,7 +59,7 @@ const callRazee = async (razeeApi, clusterId) => {
   // Create remote resources
   //
   if (subscriptions && subscriptions.length > 0) {
-    await createRemoteResources(razeeApi, Config.orgKey, subscriptions, clusterId);
+    await createRemoteResources(razeeApi, orgKey, subscriptions, clusterId);
     log.info('finished creating remote resources');
   }
 
@@ -59,13 +86,9 @@ const callRazee = async (razeeApi, clusterId) => {
 async function main() {
   await Config.init();
 
-  const apiKey = Config.orgKey;
   const razeeApi = Config.razeeApi;
   const clusterId = Config.clusterId;
 
-  if (!apiKey) {
-    throw 'RAZEE_ORG_KEY is missing';
-  }
   if (!razeeApi) {
     throw 'RAZEE_API is missing';
   }
