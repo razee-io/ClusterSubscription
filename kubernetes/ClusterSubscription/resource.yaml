@@ -59,9 +59,16 @@ spec:
           volumeMounts:
             - name: razee-identity-config
               mountPath: /home/node/envs/razee-identity-config
+            - name: razee-identity-secret
+              mountPath: /home/node/envs/razee-identity-secret
       volumes:
         - name: razee-identity-config
           configMap:
             name: razee-identity
+            defaultMode: 0400
+            optional: true
+        - name: razee-identity-secret
+          secret:
+            secretName: razee-identity
             defaultMode: 0400
             optional: true

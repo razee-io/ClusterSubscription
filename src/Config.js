@@ -19,9 +19,11 @@ const chokidar = require('chokidar');
 
 module.exports = class Config {
   static razeeApiPath = 'envs/razee-identity-config/RAZEE_API';
+  static orgKeyPath = 'envs/razee-identity-secret/RAZEE_ORG_KEY';
   static clusterIdPath = 'envs/razee-identity-config/CLUSTER_ID';
 
   static razeeApi = process.env.RAZEE_API;
+  static orgKey = process.env.RAZEE_ORG_KEY;
   static clusterId = process.env.CLUSTER_ID;
 
   static watcher;
@@ -29,6 +31,12 @@ module.exports = class Config {
   static async readRazeeApi() {
     if (await fs.pathExists(this.razeeApiPath)) {
       this.razeeApi = ((await fs.readFile(this.razeeApiPath, 'utf8')).trim() || this.razeeApi);
+    }
+  }
+
+  static async readOrgKey() {
+    if (await fs.pathExists(this.orgKeyPath)) {
+      this.orgKey = ((await fs.readFile(this.orgKeyPath, 'utf8')).trim() || this.orgKey);
     }
   }
 
@@ -40,6 +48,7 @@ module.exports = class Config {
 
   static async init() {
     await this.readRazeeApi();
+    await this.readOrgKey();
     await this.readClusterId();
   }
 
@@ -48,6 +57,10 @@ module.exports = class Config {
       if (event === 'add' || event === 'change') {
         if (path === this.razeeApiPath) {
           this.readRazeeApi();
+        }
+
+        if (path === this.orgKeyPath) {
+          this.readOrgKey();
         }
 
         if (path === this.clusterIdPath) {

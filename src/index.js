@@ -40,8 +40,8 @@ const callRazee = async (razeeApi, clusterId) => {
     orgKey = await getOrgKey();
   }
   catch(e) {
-    log.info(`RAZEE_ORG_KEY could not be read from the razeedeploy/razee-identity secret (falling back to env var): ${e.message}`);
-    orgKey = process.env.RAZEE_ORG_KEY;
+    log.info(`RAZEE_ORG_KEY could not be read from the razeedeploy/razee-identity secret (falling back to config): ${e.message}`);
+    orgKey = Config.orgKey;
   }
   if (!orgKey) {
     throw 'RAZEE_ORG_KEY is missing';
