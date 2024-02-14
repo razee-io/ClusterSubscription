@@ -17,6 +17,7 @@ before_install:
   - export WS_PRODUCTNAME=${WS_PRODUCTNAME}
   - export WS_PROJECTNAME=ClusterSubscription
   - export WS_WSS_URL=https://ibmets.whitesourcesoftware.com/agent
+  - ./build/download-kubelint.sh
 
 script:
   # Audit npm packages. Fail build whan a PR audit fails, otherwise report the vulnerability and proceed.
@@ -28,6 +29,7 @@ script:
   - if [ -n "${TRAVIS_TAG}" ]; then docker tag quay.io/razee/clustersubscription:${TRAVIS_COMMIT} quay.io/razee/clustersubscription:${TRAVIS_TAG}; fi
   - docker images
   - ./build/process-template.sh kubernetes/ClusterSubscription/resource.yaml >/tmp/resource.yaml
+  - kubelint /tmp/resource.yaml
   # Perform UA scan on non-PR builds
   - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then curl -LJO https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar; java -jar wss-unified-agent.jar -d . || echo "UA Scan Error occurred"; fi
 
