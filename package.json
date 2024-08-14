@@ -15,7 +15,7 @@
     "jsonlint": "npx jsonlint --quiet build/viewTemplate.json",
     "markdownlint": "npx markdownlint-cli README.md docs/",
     "yaml-lint": "npx yaml-lint kubernetes/**/*.yaml .travis.yml",
-    "shellcheck": "npx shellcheck build/*.sh"
+    "shellcheck": "shellcheck build/*.sh"
   },
   "repository": {
     "type": "git",
@@ -57,6 +57,7 @@
     "markdownlint": "^0.34.0",
     "mocha": "^10.7.3",
     "nyc": "^15.1.0",
-    "rewire": "^6.0.0"
+    "rewire": "^6.0.0",
+    "shellcheck": "^3.0.0"
   }
 }
