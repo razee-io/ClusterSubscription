@@ -57,7 +57,6 @@
     "markdownlint": "^0.34.0",
     "mocha": "^10.7.3",
     "nyc": "^15.1.0",
-    "rewire": "^6.0.0",
-    "shellcheck": "^3.0.0"
+    "rewire": "^6.0.0"
   }
 }
