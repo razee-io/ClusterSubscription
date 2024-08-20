@@ -8,7 +8,7 @@ services:
 
 env:
   global:
-    - GITHUB_TOKEN="${PUBLIC_GITHUB_TOKEN_2023_08_20}"
+    - GITHUB_TOKEN="${PUBLIC_GITHUB_TOKEN_2024_08_20}"
 
 before_install:
   - echo "$DOCKERHUB_TOKEN" | docker login -u "icdevops" --password-stdin
