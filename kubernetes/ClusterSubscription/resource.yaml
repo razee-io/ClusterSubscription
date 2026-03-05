@@ -54,7 +54,7 @@ spec:
               value: razee-io/clustersubscription
             - name: USER_AGENT_VERSION
               value: "{{{TRAVIS_TAG}}}"
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: clustersubscription
           volumeMounts:
             - name: razee-identity-config
